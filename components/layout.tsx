@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div>
       <nav>
@@ -23,3 +23,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     </div>
   );
 };
+
+export const Container = ({ children }: { children: React.ReactNode }) => {
+  return <div className='max-w-4xl p-1 m-auto'>{children}</div>;
+};
+
+Layout.Container = Container;
+
+export { Layout };

@@ -2,12 +2,18 @@ import {
   dehydrate,
   DehydratedState,
   QueryClient,
+  useMutation,
   useQuery,
 } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
-import React from "react";
+import { useRouter } from "next/router";
+import React, { useRef } from "react";
 import { Layout } from "../../components/layout";
-import { fetchCharacterStats } from "../../lib/react-query/fetchers";
+import { FactionEnum, StatCardDto } from "../../lib/generated-api/StatCardApi";
+import {
+  createStatCard,
+  fetchCharacterStats,
+} from "../../lib/react-query/fetchers";
 
 type SSRProps = {
   characterName: string;
@@ -15,7 +21,7 @@ type SSRProps = {
   dehydratedState: DehydratedState;
 };
 
-type Params = {
+export type Params = {
   characterName?: string;
   realm?: string;
 };
@@ -42,7 +48,7 @@ export const getServerSideProps: CreateServerSideProps = async (context) => {
     ["characterStats", { characterName, realm }],
     fetchCharacterStats
   );
-  console.log(queryClient);
+
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
@@ -52,18 +58,108 @@ export const getServerSideProps: CreateServerSideProps = async (context) => {
   };
 };
 
-const Create: NextPage<SSRProps> = ({ characterName, realm }) => {
-  const { isLoading, error, data } = useQuery(
+const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const {
+    error: saveError,
+    mutateAsync: saveCard,
+    isLoading: saveIsLoading,
+  } = useMutation(createStatCard);
+  const { error: charError, data: charData } = useQuery(
     ["characterStats", { characterName, realm }],
     fetchCharacterStats
   );
 
+  if (!charData || charError instanceof Error) {
+    return (
+      <Layout>
+        <h1 className='font-bold text-4xl'>Create</h1>
+        <Wrapper>
+          <h2 className='text-2xl font-bold'>Sorry!</h2>
+          <p>
+            There was a problem finding that character. Please verify you
+            entered the correct name and realm, then try again.
+          </p>
+          {charError instanceof Error && (
+            <p>Error Message: {charError.message}</p>
+          )}
+          <br />
+          <p>
+            <span className='font-bold'>You entered:</span>
+            <br />
+            <ul>
+              <li>Character Name: {characterName}</li>
+              <li>Realm: {realm}</li>
+            </ul>
+          </p>
+        </Wrapper>
+      </Layout>
+    );
+  }
+
+  const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const cardName = formData.get("card-name");
+
+    if (typeof cardName !== "string") return;
+
+    const statCardDto = new StatCardDto({
+      ...charData,
+      cardName,
+      factionId: FactionEnum.Alliance,
+    });
+
+    return saveCard(statCardDto).then((r) => {
+      if (typeof r.id === "number") {
+        router.push("/cards");
+      }
+    });
+  };
+
+  const { avatarUrl, renderUrl, characterName: charName, ...stats } = charData;
+
   return (
     <Layout>
       <h1 className='font-bold text-4xl'>Create</h1>
-      <div>{JSON.stringify(data, null, 2)}</div>
+      {charData && (
+        <Wrapper>
+          <h2 className='text-2xl font-bold'>{characterName}</h2>
+          <div className='grid grid-cols-2 mb-4'>
+            {Object.entries(stats).map(([statName, value]) => {
+              return (
+                <div key={`${statName}_${value}`}>
+                  <span>
+                    {statName}: {value}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <form ref={formRef} method='post' onSubmit={handleSaveCard}>
+            <fieldset disabled={saveIsLoading}>
+              <div>
+                <label htmlFor='card-name'>Card Name</label>
+                <input id='card-name' name='card-name' type='text' />
+              </div>
+              <button type='submit'>Save Card</button>
+            </fieldset>
+            {saveError instanceof Error && <div>{saveError.message}</div>}
+          </form>
+        </Wrapper>
+      )}
     </Layout>
   );
 };
 
-export default Create;
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className='border border-solid rounded-lg border-black p-8'>
+    {children}
+  </div>
+);
+
+export default CreateCards;

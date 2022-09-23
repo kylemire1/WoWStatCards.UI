@@ -1,12 +1,16 @@
 import { QueryFunction } from "@tanstack/react-query";
-import { API_BASE_URL } from "../constants";
-
-const endpoints = {
-  CharacterStats: `${API_BASE_URL}CharacterStats`,
-};
+import {
+  characterStatsClient,
+  statCardClient,
+} from "../generated-api/api-clients";
+import {
+  ApiException,
+  StatCardDto,
+  StatDto,
+} from "../generated-api/StatCardApi";
 
 export const fetchCharacterStats: QueryFunction<
-  Record<string, number>,
+  StatDto,
   [
     string,
     {
@@ -16,7 +20,28 @@ export const fetchCharacterStats: QueryFunction<
   ]
 > = async ({ queryKey }) => {
   const [_key, { characterName, realm }] = queryKey;
-  return await fetch(
-    `${endpoints.CharacterStats}?characterName=${characterName}&realm=${realm}&clientId=1f164e48ba3d47ac8f59fd6423b4bc7c`
-  ).then((res) => res.json());
+
+  try {
+    const response = await characterStatsClient.get(
+      characterName,
+      realm,
+      process.env.NEXT_PUBLIC_BLIZZ_CLIENT_ID
+    );
+    console.log(response);
+    if (!response) throw new Error("Error fetching character stats.");
+
+    return response.toJSON();
+  } catch (error: unknown) {
+    if (error instanceof ApiException) {
+      throw new Error(error.message);
+    }
+  }
+};
+
+export const createStatCard = async (newCard: StatCardDto) => {
+  return await statCardClient.post(newCard);
+};
+
+export const listStatCards = async () => {
+  return await (await statCardClient.getAll()).map((dto) => dto.toJSON());
 };

@@ -1,14 +1,7 @@
-import {
-  dehydrate,
-  DehydratedState,
-  QueryClient,
-  useQuery,
-} from "@tanstack/react-query";
-import type { GetServerSideProps, GetStaticProps, NextPage } from "next";
+import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { FormEventHandler, useState } from "react";
 import { Layout } from "../components/layout";
-import { fetchCharacterStats } from "../lib/react-query/fetchers";
 
 const Home: NextPage = () => {
   const [submitting, setSubmitting] = useState(false);
