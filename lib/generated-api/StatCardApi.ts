@@ -567,9 +567,10 @@ export interface ICharacterStats {
 }
 
 export class StatDto extends CharacterStats implements IStatDto {
-  characterName!: string;
   avatarUrl!: string;
   renderUrl!: string;
+  factionId!: FactionEnum;
+  avgItemLevel!: number;
 
   constructor(data?: IStatDto) {
     super(data);
@@ -578,9 +579,10 @@ export class StatDto extends CharacterStats implements IStatDto {
   override init(_data?: any) {
     super.init(_data);
     if (_data) {
-      this.characterName = _data["characterName"];
       this.avatarUrl = _data["avatarUrl"];
       this.renderUrl = _data["renderUrl"];
+      this.factionId = _data["factionId"];
+      this.avgItemLevel = _data["avgItemLevel"];
     }
   }
 
@@ -593,18 +595,25 @@ export class StatDto extends CharacterStats implements IStatDto {
 
   override toJSON(data?: any) {
     data = typeof data === "object" ? data : {};
-    data["characterName"] = this.characterName;
     data["avatarUrl"] = this.avatarUrl;
     data["renderUrl"] = this.renderUrl;
+    data["factionId"] = this.factionId;
+    data["avgItemLevel"] = this.avgItemLevel;
     super.toJSON(data);
     return data;
   }
 }
 
 export interface IStatDto extends ICharacterStats {
-  characterName: string;
   avatarUrl: string;
   renderUrl: string;
+  factionId: FactionEnum;
+  avgItemLevel: number;
+}
+
+export enum FactionEnum {
+  Alliance = 1,
+  Horde = 2,
 }
 
 export class StatCardDto extends CharacterStats implements IStatCardDto {
@@ -658,11 +667,6 @@ export interface IStatCardDto extends ICharacterStats {
   avatarUrl: string;
   renderUrl: string;
   factionId: FactionEnum;
-}
-
-export enum FactionEnum {
-  Alliance = 1,
-  Horde = 2,
 }
 
 export class ApiException extends Error {

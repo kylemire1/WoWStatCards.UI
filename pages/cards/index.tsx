@@ -5,40 +5,40 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from '@tanstack/react-query'
-import { GetServerSideProps, NextPage } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
-import { Layout } from '../../components/layout'
+} from "@tanstack/react-query";
+import { GetServerSideProps, NextPage } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import { Layout } from "../../components/layout";
 import {
   listStatCards,
   useDeleteStatCardMutation,
   useGetAllStatCardsQuery,
-} from '../../lib/react-query/fetchers'
+} from "../../lib/react-query/fetchers";
 
 type SSRProps = {
-  dehydratedState: DehydratedState
-}
+  dehydratedState: DehydratedState;
+};
 
 export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery(['statCards'], listStatCards)
+  await queryClient.prefetchQuery(["statCards"], listStatCards);
 
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
     },
-  }
-}
+  };
+};
 
 const Cards: NextPage = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { mutateAsync: deleteCard } = useDeleteStatCardMutation({
     queryClient,
-  })
-  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery()
+  });
+  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery();
 
   if (cardsError instanceof Error) {
     return (
@@ -50,7 +50,7 @@ const Cards: NextPage = () => {
           <p>{cardsError.message}</p>
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
@@ -62,9 +62,9 @@ const Cards: NextPage = () => {
             return (
               <div key={`stat_card_${c.id}`} className='flex gap-4'>
                 <Link href={`/card/edit/${c.id}`}>
-                  <a className='block rounded-lg hover:outline hover:outline-solid hover:outline-black w-min p-4'>
+                  <a className='block rounded-lg shadow-slate-200 shadow-lg hover:outline hover:outline-solid hover:outline-blue-500 outline-2 outline-offset-2 w-min p-4'>
                     <div className='grid grid-cols-[75px_150px] items-center'>
-                      <div className='render-wrapper'>
+                      <div>
                         <Image
                           alt={c.characterName}
                           src={c.avatarUrl}
@@ -76,7 +76,9 @@ const Cards: NextPage = () => {
                         <h2 className='text-xl font-bold'>{c.cardName}</h2>
                         <ul>
                           <li>Character: {c.characterName}</li>
-                          <li>Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}</li>
+                          <li>
+                            Faction: {c.factionId === 1 ? "Alliance" : "Horde"}
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -84,12 +86,12 @@ const Cards: NextPage = () => {
                 </Link>
                 <button onClick={() => deleteCard(c.id)}>Delete</button>
               </div>
-            )
+            );
           })}
         </div>
       </Layout.Container>
     </Layout>
-  )
-}
+  );
+};
 
-export default Cards
+export default Cards;

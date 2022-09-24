@@ -1,9 +1,11 @@
 import Link from "next/link";
 import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./error-boundary";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       <nav>
         <Layout.Container>
           <ul className='flex gap-2 justify-end'>
@@ -27,12 +29,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           Powered by <span>.Net Core and NEXT.js</span>
         </span>
       </footer>
-    </>
+    </ErrorBoundary>
   );
 };
 
 export const Container = ({ children }: { children: React.ReactNode }) => {
-  return <div className='max-w-4xl p-1 m-auto'>{children}</div>;
+  return <div className='max-w-4xl p-4 md:p-2 m-auto'>{children}</div>;
 };
 
 Layout.Container = Container;

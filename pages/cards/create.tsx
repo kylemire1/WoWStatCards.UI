@@ -1,49 +1,50 @@
-import { dehydrate, DehydratedState, QueryClient } from '@tanstack/react-query'
-import { GetServerSideProps, NextPage } from 'next'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import React, { useRef } from 'react'
-import { Layout } from '../../components/layout'
-import { FactionEnum, StatCardDto } from '../../lib/generated-api/StatCardApi'
+import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
+import { GetServerSideProps, NextPage } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import React, { useRef } from "react";
+import { Layout } from "../../components/layout";
+import { FactionEnum, StatCardDto } from "../../lib/generated-api/StatCardApi";
 import {
   fetchCharacterStats,
   useGetCharacterStatsQuery,
   useSaveStatCardMutation,
-} from '../../lib/react-query/fetchers'
+} from "../../lib/react-query/fetchers";
 
 type SSRProps = {
-  characterName: string
-  realm: string
-  dehydratedState: DehydratedState
-}
+  characterName: string;
+  realm: string;
+  dehydratedState: DehydratedState;
+};
 
 export type Params = {
-  characterName?: string
-  realm?: string
-}
+  characterName?: string;
+  realm?: string;
+};
 
 export const getServerSideProps: GetServerSideProps<SSRProps, Params> = async (
   context
 ) => {
-  const params = context.query
-  const characterName = params?.characterName
-  const realm = params?.realm
+  const params = context.query;
+  const characterName = params?.characterName;
+  const realm = params?.realm;
 
-  if (typeof characterName !== 'string' || typeof realm !== 'string') {
+  if (typeof characterName !== "string" || typeof realm !== "string") {
     return {
       redirect: {
         permanent: false,
-        destination: '/',
+        destination: "/",
       },
-    }
+    };
   }
 
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery(
-    ['characterStats', { characterName, realm }],
+    ["characterStats", { characterName, realm }],
     fetchCharacterStats
-  )
+  );
 
   return {
     props: {
@@ -51,21 +52,21 @@ export const getServerSideProps: GetServerSideProps<SSRProps, Params> = async (
       characterName,
       realm,
     },
-  }
-}
+  };
+};
 
-const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
-  const router = useRouter()
-  const formRef = useRef<HTMLFormElement>(null)
+const CreateCards: NextPage<SSRProps> = (props) => {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const {
     error: saveError,
     mutateAsync: saveCard,
     isLoading: saveIsLoading,
-  } = useSaveStatCardMutation()
+  } = useSaveStatCardMutation();
   const { error: charError, data: charData } = useGetCharacterStatsQuery({
-    characterName,
-    realm,
-  })
+    characterName: props.characterName,
+    realm: props.realm,
+  });
 
   if (!charData || charError instanceof Error) {
     return (
@@ -75,49 +76,57 @@ const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
           <Wrapper>
             <h2 className='text-2xl font-bold'>Sorry!</h2>
             <p>
-              There was a problem finding that character. Please verify you entered the
-              correct name and realm, then try again.
+              There was a problem finding that character. Please verify you
+              entered the correct name and realm, then{" "}
+              <Link href='/'>
+                <a className='underline '>try again</a>
+              </Link>
+              .
             </p>
-            {charError instanceof Error && <p>Error Message: {charError.message}</p>}
             <br />
             <p>
               <span className='font-bold'>You entered:</span>
               <br />
               <ul>
-                <li>Character Name: {characterName}</li>
-                <li>Realm: {realm}</li>
+                <li>Character Name: {props.characterName}</li>
+                <li>Realm: {props.realm}</li>
               </ul>
             </p>
           </Wrapper>
         </Layout.Container>
       </Layout>
-    )
+    );
   }
 
   const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!formRef.current) return
+    if (!formRef.current) return;
 
-    const formData = new FormData(formRef.current)
-    const cardName = formData.get('card-name')
+    const formData = new FormData(formRef.current);
+    const cardName = formData.get("card-name");
 
-    if (typeof cardName !== 'string') return
+    if (typeof cardName !== "string") return;
 
     const statCardDto = new StatCardDto({
       ...charData,
       cardName,
       factionId: FactionEnum.Alliance,
-    })
+    });
 
     return saveCard(statCardDto).then((r) => {
-      if (typeof r.id === 'number') {
-        router.push('/cards')
+      if (typeof r.id === "number") {
+        router.push("/cards");
       }
-    })
-  }
+    });
+  };
 
-  const { avatarUrl, renderUrl, characterName: charName, ...stats } = charData
+  const {
+    avatarUrl,
+    renderUrl,
+    characterName: characterName,
+    ...stats
+  } = charData;
 
   return (
     <Layout>
@@ -134,11 +143,15 @@ const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
                       <span className='font-bold block'>{statName}</span>
                       <span>{value}</span>
                     </div>
-                  )
+                  );
                 })}
               </div>
-              <div className='relative render-wrapper'>
-                <Image src={renderUrl} alt={charName} width={275} height={485} />
+              <div className='relative render-wrapper w-full max-w-[260px]'>
+                <img
+                  className='absolute inset-0 h-full object-cover drop-shadow-xl'
+                  src={renderUrl}
+                  alt={characterName}
+                />
               </div>
             </div>
 
@@ -159,11 +172,13 @@ const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
         )}
       </Layout.Container>
     </Layout>
-  )
-}
+  );
+};
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className='border border-solid rounded-lg border-black p-8'>{children}</div>
-)
+  <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300'>
+    {children}
+  </div>
+);
 
-export default CreateCards
+export default CreateCards;

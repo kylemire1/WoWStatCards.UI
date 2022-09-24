@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-query";
 import Seo from "../components/seo";
 import queryClient from "../lib/react-query/query-client";
-import { ErrorBoundary } from "../components/error-boundary";
 import NextNProgress from "nextjs-progressbar";
 
 function MyApp({
@@ -17,18 +16,17 @@ function MyApp({
 }: AppProps<{ dehydratedState: DehydratedState }>) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <Hydrate state={pageProps.dehydratedState}>
-          <Seo />
-          <NextNProgress
-            startPosition={0.3}
-            stopDelayMs={200}
-            height={3}
-            showOnShallow={true}
-          />
-          <Component {...pageProps} />
-        </Hydrate>
-      </ErrorBoundary>
+      <Hydrate state={pageProps.dehydratedState}>
+        <Seo />
+        <NextNProgress
+          startPosition={0.3}
+          stopDelayMs={200}
+          height={3}
+          showOnShallow={true}
+        />
+
+        <Component {...pageProps} />
+      </Hydrate>
     </QueryClientProvider>
   );
 }
