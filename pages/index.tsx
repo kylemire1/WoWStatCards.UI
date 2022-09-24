@@ -1,10 +1,10 @@
+import { useIsFetching } from "@tanstack/react-query";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
-import React, { FormEventHandler, useState } from "react";
+import React, { FormEventHandler } from "react";
 import { Layout } from "../components/layout";
 
 const Home: NextPage = () => {
-  const [submitting, setSubmitting] = useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const router = useRouter();
 
@@ -12,46 +12,45 @@ const Home: NextPage = () => {
     e.preventDefault();
     if (!formRef.current) return;
 
-    setSubmitting(true);
-
     const formData = new FormData(formRef.current);
     const characterName = formData.get("characterName");
     const realm = formData.get("realm");
 
     if (typeof characterName !== "string" || typeof realm !== "string") {
-      setSubmitting(false);
       return;
     }
 
     router.push(`/cards/create?characterName=${characterName}&realm=${realm}`);
-    setSubmitting(false);
   };
 
   return (
     <Layout>
-      <div>
+      <Layout.Container>
         <h1 className='font-bold text-4xl'>Character Finder</h1>
         <p>Find a World of Warcraft character by their name and realm.</p>
         <form ref={formRef} onSubmit={handleSubmit}>
-          <fieldset disabled={submitting}>
+          <div>
             <div>
-              <div>
-                <label htmlFor='characterName'>Character Name</label>
-                <br />
-                <input id='characterName' name='characterName' type='text' />
-              </div>
-              <div>
-                <label htmlFor='realm'>Realm</label>
-                <br />
-                <input id='realm' name='realm' type='text' />
-              </div>
+              <label htmlFor='characterName'>Character Name</label>
+              <br />
+              <input
+                id='characterName'
+                name='characterName'
+                type='text'
+                required
+              />
             </div>
             <div>
-              <button type='submit'>Search</button>
+              <label htmlFor='realm'>Realm</label>
+              <br />
+              <input id='realm' name='realm' type='text' required />
             </div>
-          </fieldset>
+          </div>
+          <div>
+            <button type='submit'>Search</button>
+          </div>
         </form>
-      </div>
+      </Layout.Container>
     </Layout>
   );
 };

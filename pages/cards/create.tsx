@@ -1,18 +1,13 @@
-import {
-  dehydrate,
-  DehydratedState,
-  QueryClient,
-  useMutation,
-  useQuery,
-} from "@tanstack/react-query";
+import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useRef } from "react";
 import { Layout } from "../../components/layout";
 import { FactionEnum, StatCardDto } from "../../lib/generated-api/StatCardApi";
 import {
-  createStatCard,
   fetchCharacterStats,
+  useGetCharacterStatsQuery,
+  useSaveStatCardMutation,
 } from "../../lib/react-query/fetchers";
 
 type SSRProps = {
@@ -26,9 +21,9 @@ export type Params = {
   realm?: string;
 };
 
-type CreateServerSideProps = GetServerSideProps<SSRProps, Params>;
-
-export const getServerSideProps: CreateServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps<SSRProps, Params> = async (
+  context
+) => {
   const params = context.query;
   const characterName = params?.characterName;
   const realm = params?.realm;
@@ -65,35 +60,37 @@ const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
     error: saveError,
     mutateAsync: saveCard,
     isLoading: saveIsLoading,
-  } = useMutation(createStatCard);
-  const { error: charError, data: charData } = useQuery(
-    ["characterStats", { characterName, realm }],
-    fetchCharacterStats
-  );
+  } = useSaveStatCardMutation();
+  const { error: charError, data: charData } = useGetCharacterStatsQuery({
+    characterName,
+    realm,
+  });
 
   if (!charData || charError instanceof Error) {
     return (
       <Layout>
-        <h1 className='font-bold text-4xl'>Create</h1>
-        <Wrapper>
-          <h2 className='text-2xl font-bold'>Sorry!</h2>
-          <p>
-            There was a problem finding that character. Please verify you
-            entered the correct name and realm, then try again.
-          </p>
-          {charError instanceof Error && (
-            <p>Error Message: {charError.message}</p>
-          )}
-          <br />
-          <p>
-            <span className='font-bold'>You entered:</span>
+        <Layout.Container>
+          <h1 className='font-bold text-4xl'>Create</h1>
+          <Wrapper>
+            <h2 className='text-2xl font-bold'>Sorry!</h2>
+            <p>
+              There was a problem finding that character. Please verify you
+              entered the correct name and realm, then try again.
+            </p>
+            {charError instanceof Error && (
+              <p>Error Message: {charError.message}</p>
+            )}
             <br />
-            <ul>
-              <li>Character Name: {characterName}</li>
-              <li>Realm: {realm}</li>
-            </ul>
-          </p>
-        </Wrapper>
+            <p>
+              <span className='font-bold'>You entered:</span>
+              <br />
+              <ul>
+                <li>Character Name: {characterName}</li>
+                <li>Realm: {realm}</li>
+              </ul>
+            </p>
+          </Wrapper>
+        </Layout.Container>
       </Layout>
     );
   }
@@ -125,33 +122,35 @@ const CreateCards: NextPage<SSRProps> = ({ characterName, realm }) => {
 
   return (
     <Layout>
-      <h1 className='font-bold text-4xl'>Create</h1>
-      {charData && (
-        <Wrapper>
-          <h2 className='text-2xl font-bold'>{characterName}</h2>
-          <div className='grid grid-cols-2 mb-4'>
-            {Object.entries(stats).map(([statName, value]) => {
-              return (
-                <div key={`${statName}_${value}`}>
-                  <span>
-                    {statName}: {value}
-                  </span>
+      <Layout.Container>
+        <h1 className='font-bold text-4xl'>Create</h1>
+        {charData && (
+          <Wrapper>
+            <h2 className='text-2xl font-bold'>{characterName}</h2>
+            <div className='grid grid-cols-2 mb-4'>
+              {Object.entries(stats).map(([statName, value]) => {
+                return (
+                  <div key={`${statName}_${value}`}>
+                    <span>
+                      {statName}: {value}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <form ref={formRef} method='post' onSubmit={handleSaveCard}>
+              <fieldset disabled={saveIsLoading}>
+                <div>
+                  <label htmlFor='card-name'>Card Name</label>
+                  <input id='card-name' name='card-name' type='text' />
                 </div>
-              );
-            })}
-          </div>
-          <form ref={formRef} method='post' onSubmit={handleSaveCard}>
-            <fieldset disabled={saveIsLoading}>
-              <div>
-                <label htmlFor='card-name'>Card Name</label>
-                <input id='card-name' name='card-name' type='text' />
-              </div>
-              <button type='submit'>Save Card</button>
-            </fieldset>
-            {saveError instanceof Error && <div>{saveError.message}</div>}
-          </form>
-        </Wrapper>
-      )}
+                <button type='submit'>Save Card</button>
+              </fieldset>
+              {saveError instanceof Error && <div>{saveError.message}</div>}
+            </form>
+          </Wrapper>
+        )}
+      </Layout.Container>
     </Layout>
   );
 };

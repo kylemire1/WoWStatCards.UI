@@ -2,21 +2,27 @@ import {
   dehydrate,
   DehydratedState,
   QueryClient,
+  useMutation,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, NextPage } from "next";
 import Image from "next/image";
 import React from "react";
 import { Layout } from "../../components/layout";
-import { listStatCards } from "../../lib/react-query/fetchers";
+import {
+  createStatCard,
+  deleteStatCard,
+  listStatCards,
+  useDeleteStatCardMutation,
+  useGetAllStatCardsQuery,
+} from "../../lib/react-query/fetchers";
 
 type SSRProps = {
   dehydratedState: DehydratedState;
 };
 
-type CardsServerSideProps = GetServerSideProps<SSRProps>;
-
-export const getServerSideProps: CardsServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery(["statCards"], listStatCards);
@@ -28,11 +34,12 @@ export const getServerSideProps: CardsServerSideProps = async (context) => {
   };
 };
 
-const Cards = () => {
-  const { error: cardsError, data: cardsData } = useQuery(
-    ["statCards"],
-    listStatCards
-  );
+const Cards: NextPage = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync: deleteCard } = useDeleteStatCardMutation({
+    queryClient,
+  });
+  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery();
 
   if (cardsError instanceof Error) {
     <Layout>
@@ -56,6 +63,7 @@ const Cards = () => {
                 <div className='grid grid-cols-[75px_1fr] items-center'>
                   <div>
                     <Image src={c.avatarUrl} width='64' height='64' />
+                    <button onClick={() => deleteCard(c.id)}>Delete</button>
                   </div>
                   <div>
                     <h2 className='text-xl font-bold'>{c.cardName}</h2>

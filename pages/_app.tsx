@@ -4,23 +4,31 @@ import type { AppProps } from "next/app";
 import {
   DehydratedState,
   Hydrate,
-  QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
 import Seo from "../components/seo";
+import queryClient from "../lib/react-query/query-client";
+import { ErrorBoundary } from "../components/error-boundary";
+import NextNProgress from "nextjs-progressbar";
 
 function MyApp({
   Component,
   pageProps,
 }: AppProps<{ dehydratedState: DehydratedState }>) {
-  const queryClient = React.useRef(new QueryClient());
-
   return (
-    <QueryClientProvider client={queryClient.current}>
-      <Hydrate state={pageProps.dehydratedState}>
-        <Seo />
-        <Component {...pageProps} />
-      </Hydrate>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <Hydrate state={pageProps.dehydratedState}>
+          <Seo />
+          <NextNProgress
+            startPosition={0.3}
+            stopDelayMs={200}
+            height={3}
+            showOnShallow={true}
+          />
+          <Component {...pageProps} />
+        </Hydrate>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

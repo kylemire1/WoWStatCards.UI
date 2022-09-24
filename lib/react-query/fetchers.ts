@@ -1,4 +1,9 @@
-import { QueryFunction } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryFunction,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import {
   characterStatsClient,
   statCardClient,
@@ -27,7 +32,7 @@ export const fetchCharacterStats: QueryFunction<
       realm,
       process.env.NEXT_PUBLIC_BLIZZ_CLIENT_ID
     );
-    console.log(response);
+
     if (!response) throw new Error("Error fetching character stats.");
 
     return response.toJSON();
@@ -44,4 +49,52 @@ export const createStatCard = async (newCard: StatCardDto) => {
 
 export const listStatCards = async () => {
   return await (await statCardClient.getAll()).map((dto) => dto.toJSON());
+};
+
+export const deleteStatCard = async (cardId: number) => {
+  return await statCardClient.delete(cardId);
+};
+
+export const useGetAllStatCardsQuery = () => {
+  const statCards = useQuery(["statCards"], listStatCards);
+
+  return { ...statCards };
+};
+
+export const useGetCharacterStatsQuery = ({
+  characterName,
+  realm,
+}: {
+  characterName: string;
+  realm: string;
+}) => {
+  const characterStats = useQuery(
+    ["characterStats", { characterName, realm }],
+    fetchCharacterStats
+  );
+
+  return { ...characterStats };
+};
+
+export const useSaveStatCardMutation = () => {
+  const saveStatCard = useMutation(createStatCard);
+
+  return { ...saveStatCard };
+};
+
+export const useDeleteStatCardMutation = ({
+  queryClient,
+}: {
+  queryClient: QueryClient;
+}) => {
+  const deleteCard = useMutation(deleteStatCard, {
+    onSuccess() {
+      queryClient.invalidateQueries(["statCards"], {
+        exact: true,
+        refetchType: "active",
+      });
+    },
+  });
+
+  return { ...deleteCard };
 };
