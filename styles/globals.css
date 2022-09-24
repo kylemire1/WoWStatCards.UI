@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  button, [type='button'], [type='reset'], [type='submit'] {
+    @apply bg-gray-300 p-2
+  }
+}
+
+@layer components {
+  .render-wrapper > span {
+    @apply max-w-none w-[265%] !important;
+    @apply -translate-x-[30%] !important;
+    @apply drop-shadow-lg
+  }
+  
+}

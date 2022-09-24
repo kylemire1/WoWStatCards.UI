@@ -5,51 +5,52 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from "@tanstack/react-query";
-import { GetServerSideProps, NextPage } from "next";
-import Image from "next/image";
-import React from "react";
-import { Layout } from "../../components/layout";
+} from '@tanstack/react-query'
+import { GetServerSideProps, NextPage } from 'next'
+import Image from 'next/image'
+import Link from 'next/link'
+import React from 'react'
+import { Layout } from '../../components/layout'
 import {
-  createStatCard,
-  deleteStatCard,
   listStatCards,
   useDeleteStatCardMutation,
   useGetAllStatCardsQuery,
-} from "../../lib/react-query/fetchers";
+} from '../../lib/react-query/fetchers'
 
 type SSRProps = {
-  dehydratedState: DehydratedState;
-};
+  dehydratedState: DehydratedState
+}
 
 export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient()
 
-  await queryClient.prefetchQuery(["statCards"], listStatCards);
+  await queryClient.prefetchQuery(['statCards'], listStatCards)
 
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
     },
-  };
-};
+  }
+}
 
 const Cards: NextPage = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const { mutateAsync: deleteCard } = useDeleteStatCardMutation({
     queryClient,
-  });
-  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery();
+  })
+  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery()
 
   if (cardsError instanceof Error) {
-    <Layout>
-      <h1 className='font-bold text-4xl'>Cards</h1>
-      <div>
-        <h2>Sorry!</h2>
-        <p>There was a problem getting your stat cards.</p>
-        <p>{cardsError.message}</p>
-      </div>
-    </Layout>;
+    return (
+      <Layout>
+        <h1 className='font-bold text-4xl'>Cards</h1>
+        <div>
+          <h2>Sorry!</h2>
+          <p>There was a problem getting your stat cards.</p>
+          <p>{cardsError.message}</p>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -59,29 +60,36 @@ const Cards: NextPage = () => {
         <div className='flex flex-col w-full gap-4'>
           {cardsData?.map((c) => {
             return (
-              <div key={`stat_card_${c.id}`}>
-                <div className='grid grid-cols-[75px_1fr] items-center'>
-                  <div>
-                    <Image src={c.avatarUrl} width='64' height='64' />
-                    <button onClick={() => deleteCard(c.id)}>Delete</button>
-                  </div>
-                  <div>
-                    <h2 className='text-xl font-bold'>{c.cardName}</h2>
-                    <ul>
-                      <li>Character: {c.characterName}</li>
-                      <li>
-                        Faction: {c.factionId === 1 ? "Alliance" : "Horde"}
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+              <div key={`stat_card_${c.id}`} className='flex gap-4'>
+                <Link href={`/card/edit/${c.id}`}>
+                  <a className='block rounded-lg hover:outline hover:outline-solid hover:outline-black w-min p-4'>
+                    <div className='grid grid-cols-[75px_150px] items-center'>
+                      <div className='render-wrapper'>
+                        <Image
+                          alt={c.characterName}
+                          src={c.avatarUrl}
+                          width='64'
+                          height='64'
+                        />
+                      </div>
+                      <div>
+                        <h2 className='text-xl font-bold'>{c.cardName}</h2>
+                        <ul>
+                          <li>Character: {c.characterName}</li>
+                          <li>Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </a>
+                </Link>
+                <button onClick={() => deleteCard(c.id)}>Delete</button>
               </div>
-            );
+            )
           })}
         </div>
       </Layout.Container>
     </Layout>
-  );
-};
+  )
+}
 
-export default Cards;
+export default Cards
