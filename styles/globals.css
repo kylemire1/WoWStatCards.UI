@@ -3,7 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply bg-slate-100
+  }
 
+  body {
+    @apply before:bg-light-image before:absolute before:inset-0 before:bg-no-repeat before:saturate-50 before:opacity-50 before:-z-20 after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:to-slate-100 after:-z-10 
+  }
 
   button, [type='button'], [type='reset'], [type='submit'] {
     @apply border-gray-300 border rounded p-2
@@ -16,3 +22,5 @@
   }
   
 }
+
+

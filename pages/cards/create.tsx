@@ -1,13 +1,13 @@
 import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { Layout } from "../../components/layout";
 import StatCard from "../../components/stat-card";
 import StatCardError from "../../components/stat-card-error";
-import { FactionEnum, StatCardDto } from "../../lib/generated-api/StatCardApi";
+import SvgBackground from "../../components/svg-background";
+import { StatCardDto } from "../../lib/generated-api/StatCardApi";
 import {
   fetchCharacterStats,
   useGetCharacterStatsQuery,
@@ -59,8 +59,9 @@ export const getServerSideProps: GetServerSideProps<
 };
 
 const CreateCards: NextPage<SSRProps> = (props) => {
+  const [cardName, setCardName] = useState("");
+  const [selectedStats, setSelectedStats] = useState<Array<string>>([]);
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
   const {
     error: saveError,
     mutateAsync: saveCard,
@@ -77,26 +78,19 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     );
   }
 
-  const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardName(e.target.value);
+  };
 
-    if (!formRef.current) return;
+  const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
 
-    const formData = new FormData(formRef.current);
-    const cardName = formData.get("card-name");
-
-    if (typeof cardName !== "string") return;
-
-    const statCardDto = new StatCardDto({
-      ...charData,
-      cardName,
-    });
-
-    const result = await saveCard(statCardDto);
-
-    if (typeof result?.id === "number") {
-      router.push("/cards");
+    if (checked) {
+      setSelectedStats([...selectedStats, e.target.value]);
+      return;
     }
+
+    setSelectedStats([...selectedStats.filter((s) => s !== e.target.value)]);
   };
 
   const {
@@ -106,47 +100,105 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     ...stats
   } = charData;
 
+  const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+
+    if (cardName === "" || selectedStats.length === 0) return;
+
+    const statCardData = selectedStats.reduce<Record<string, number | string>>(
+      (prevValue, currValue) => {
+        const statCopy: Record<string, number> = { ...stats };
+        prevValue[currValue] = statCopy[currValue];
+
+        return prevValue;
+      },
+      {
+        cardName,
+        characterName,
+        avatarUrl,
+        renderUrl,
+        factionId: charData.factionId,
+      }
+    );
+
+    const statCardDto = StatCardDto.fromJS(statCardData);
+
+    const result = await saveCard(statCardDto);
+
+    if (typeof result.id === "number") {
+      router.push("/cards");
+    }
+  };
+
   return (
     <Layout>
       <Layout.Container>
         <h1 className='font-bold text-4xl'>Create</h1>
         {charData && (
-          <StatCard>
-            <h2 className='text-2xl font-bold'>{characterName}</h2>
-            <div className='flex gap-2'>
-              <div className='grid grid-cols-3 mb-2 gap-4'>
-                {Object.entries(stats).map(([statName, value]) => {
-                  return (
-                    <div key={`${statName}_${value}`}>
-                      <span className='font-bold block'>{statName}</span>
-                      <span>{value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className='relative render-wrapper w-full max-w-[260px]'>
-                <img
-                  className='absolute inset-0 h-full object-cover drop-shadow-xl'
+          <>
+            <StatCard>
+              <SvgBackground />
+              <div className='absolute top-0 bottom-0 left-8 right-8'>
+                <Image
                   src={renderUrl}
-                  alt={characterName}
+                  layout='fill'
+                  className='drop-shadow-lg'
                 />
               </div>
+            </StatCard>
+            <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
+              <form method='post' onSubmit={handleSaveCard}>
+                <fieldset disabled={saveIsLoading}>
+                  <div className='my-8'>
+                    <label htmlFor='card-name' className='font-bold'>
+                      Card Name
+                    </label>
+                    <br />
+                    <input
+                      onChange={handleNameChange}
+                      id='card-name'
+                      name='card-name'
+                      type='text'
+                      className='rounded w-full focus:ring-offset-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:ring-offset-white'
+                    />
+                  </div>
+                  <fieldset className='mb-4'>
+                    <legend className='mb-4'>
+                      Stats to Display (Choose up to 8)
+                    </legend>
+                    <div className='grid gap-2 md:grid-cols-2'>
+                      {Object.keys(stats).map((statName) => {
+                        return (
+                          <label key={`stat_${statName}`}>
+                            <input
+                              type='checkbox'
+                              name={statName}
+                              value={statName}
+                              className='mr-2'
+                              onChange={handleCheckbox}
+                            />
+                            {statName // insert a space before all caps
+                              .replace(/([A-Z])/g, " $1")
+                              // uppercase the first character
+                              .replace(/^./, function (str) {
+                                return str.toUpperCase();
+                              })}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                  <button
+                    className='focus:ring-blue-500 focus:outline-none focus:border-transparent  focus:ring focus:ring-offset-2 focus-ring-offset-white'
+                    type='submit'
+                  >
+                    Save Card
+                  </button>
+                </fieldset>
+                {saveError instanceof Error && <div>{saveError.message}</div>}
+              </form>
             </div>
-
-            <form ref={formRef} method='post' onSubmit={handleSaveCard}>
-              <fieldset disabled={saveIsLoading}>
-                <div className='my-8'>
-                  <label htmlFor='card-name' className='font-bold'>
-                    Card Name
-                  </label>
-                  <br />
-                  <input id='card-name' name='card-name' type='text' />
-                </div>
-                <button type='submit'>Save Card</button>
-              </fieldset>
-              {saveError instanceof Error && <div>{saveError.message}</div>}
-            </form>
-          </StatCard>
+          </>
         )}
       </Layout.Container>
     </Layout>

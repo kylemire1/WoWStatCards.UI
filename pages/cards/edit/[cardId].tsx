@@ -112,7 +112,7 @@ const EditCard: NextPage<SSRProps> = (props) => {
   return (
     <Layout>
       <Layout.Container>
-        <h1 className='font-bold text-4xl'>Create</h1>
+        <h1 className='font-bold text-4xl'>Edit</h1>
         {charData && (
           <StatCard>
             <h2 className='text-2xl font-bold'>{characterName}</h2>

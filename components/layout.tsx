@@ -1,29 +1,27 @@
-import Link from "next/link";
 import React from "react";
-import ErrorBoundary from "./error-boundary";
+import Link from "next/link";
+import Image from "next/image";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <nav>
-        <Layout.Container>
-          <ul className='flex gap-2 justify-end'>
-            <li>
-              <Link href='/'>
-                <a>Home</a>
-              </Link>
-            </li>
-            <li>
-              <Link href='/cards'>
-                <a>Saved Cards</a>
-              </Link>
-            </li>
-          </ul>
-        </Layout.Container>
+        <ul className='fixed top-0 left-0 z-50 right-0 flex gap-2 justify-end backdrop-filter backdrop-blur-md px-4 py-6 font-bold'>
+          <li>
+            <Link href='/'>
+              <a>Home</a>
+            </Link>
+          </li>
+          <li>
+            <Link href='/cards'>
+              <a>Saved Cards</a>
+            </Link>
+          </li>
+        </ul>
       </nav>
-      <main>{children}</main>
+      <main className='py-24 min-h-[95vh]'>{children}</main>
 
-      <footer className='text-center mt-24'>
+      <footer className='text-center'>
         <span>
           Powered by <span>.Net Core and NEXT.js</span>
         </span>
@@ -33,7 +31,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const Container = ({ children }: { children: React.ReactNode }) => {
-  return <div className='max-w-4xl p-4 md:p-2 m-auto'>{children}</div>;
+  return <div className='max-w-4xl px-4 md:px-2 m-auto'>{children}</div>;
 };
 
 Layout.Container = Container;
