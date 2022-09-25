@@ -1,83 +1,82 @@
-import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
+import {
+  dehydrate,
+  DehydratedState,
+  QueryClient,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useRef } from "react";
-import { Layout } from "../../components/layout";
-import StatCard from "../../components/stat-card";
-import StatCardError from "../../components/stat-card-error";
-import { FactionEnum, StatCardDto } from "../../lib/generated-api/StatCardApi";
+import { Layout } from "../../../components/layout";
+import StatCard from "../../../components/stat-card";
+import StatCardError from "../../../components/stat-card-error";
+import { StatCardDto } from "../../../lib/generated-api/StatCardApi";
 import {
-  fetchCharacterStats,
-  useGetCharacterStatsQuery,
-  useSaveStatCardMutation,
-} from "../../lib/react-query/fetchers";
+  getStatCard,
+  useGetStatCardQuery,
+  useUpdateCardMutation,
+} from "../../../lib/react-query/fetchers";
 
 type SSRProps = {
-  characterName: string;
-  realm: string;
+  cardId: number;
   dehydratedState: DehydratedState;
 };
 
-type CreateCardParams = {
-  characterName?: string;
-  realm?: string;
+export type EditCardParams = {
+  cardId?: string;
 };
 
 export const getServerSideProps: GetServerSideProps<
   SSRProps,
-  CreateCardParams
+  EditCardParams
 > = async (context) => {
   const params = context.query;
-  const characterName = params?.characterName;
-  const realm = params?.realm;
+  const cardId = params?.cardId;
 
-  if (typeof characterName !== "string" || typeof realm !== "string") {
+  if (!cardId || typeof cardId !== "string" || isNaN(+cardId)) {
     return {
       redirect: {
         permanent: false,
-        destination: "/",
+        destination: "/cards",
       },
     };
   }
 
   const queryClient = new QueryClient();
-
-  await queryClient.prefetchQuery(
-    ["characterStats", { characterName, realm }],
-    fetchCharacterStats
-  );
+  const numId = +cardId;
+  await queryClient.prefetchQuery(["statCard", { id: numId }], getStatCard);
 
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
-      characterName,
-      realm,
+      cardId: numId,
     },
   };
 };
 
-const CreateCards: NextPage<SSRProps> = (props) => {
+const EditCard: NextPage<SSRProps> = (props) => {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const queryClient = useQueryClient();
   const {
-    error: saveError,
-    mutateAsync: saveCard,
-    isLoading: saveIsLoading,
-  } = useSaveStatCardMutation();
-  const { error: charError, data: charData } = useGetCharacterStatsQuery({
-    characterName: props.characterName,
-    realm: props.realm,
-  });
+    error: updateError,
+    mutateAsync: updateCard,
+    isLoading: updateIsLoading,
+  } = useUpdateCardMutation({ queryClient });
+  const { data: charData, error: charError } = useGetStatCardQuery(
+    props?.cardId
+  );
+
+  console.log(charData);
 
   if (!charData || charError instanceof Error) {
-    return (
-      <StatCardError characterName={props.characterName} realm={props.realm} />
-    );
+    return <StatCardError />;
   }
 
-  const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
+  const handleUpdateCard: React.FormEventHandler<HTMLFormElement> = async (
+    e
+  ) => {
     e.preventDefault();
 
     if (!formRef.current) return;
@@ -92,7 +91,10 @@ const CreateCards: NextPage<SSRProps> = (props) => {
       cardName,
     });
 
-    const result = await saveCard(statCardDto);
+    const result = await updateCard({
+      cardId: statCardDto.id,
+      statCardDto: statCardDto,
+    });
 
     if (typeof result?.id === "number") {
       router.push("/cards");
@@ -103,6 +105,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     avatarUrl,
     renderUrl,
     characterName: characterName,
+    cardName,
     ...stats
   } = charData;
 
@@ -133,18 +136,23 @@ const CreateCards: NextPage<SSRProps> = (props) => {
               </div>
             </div>
 
-            <form ref={formRef} method='post' onSubmit={handleSaveCard}>
-              <fieldset disabled={saveIsLoading}>
+            <form ref={formRef} method='post' onSubmit={handleUpdateCard}>
+              <fieldset disabled={updateIsLoading}>
                 <div className='my-8'>
                   <label htmlFor='card-name' className='font-bold'>
                     Card Name
                   </label>
                   <br />
-                  <input id='card-name' name='card-name' type='text' />
+                  <input
+                    id='card-name'
+                    name='card-name'
+                    type='text'
+                    defaultValue={cardName}
+                  />
                 </div>
-                <button type='submit'>Save Card</button>
+                <button type='submit'>Update Card</button>
               </fieldset>
-              {saveError instanceof Error && <div>{saveError.message}</div>}
+              {updateError instanceof Error && <div>{updateError.message}</div>}
             </form>
           </StatCard>
         )}
@@ -153,4 +161,4 @@ const CreateCards: NextPage<SSRProps> = (props) => {
   );
 };
 
-export default CreateCards;
+export default EditCard;

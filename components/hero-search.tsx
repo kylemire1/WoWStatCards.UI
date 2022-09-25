@@ -71,6 +71,7 @@ const HeroSearch = () => {
                 name='characterName'
                 className='block w-full rounded-md border border-transparent px-5 py-3 text-base text-gray-900 placeholder-gray-500 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500'
                 placeholder='Character Name'
+                required
               />
             </div>
             <div className='min-w-0 flex-1'>
@@ -83,6 +84,7 @@ const HeroSearch = () => {
                 name='realm'
                 className='block w-full rounded-md border border-transparent px-5 py-3 text-base text-gray-900 placeholder-gray-500 shadow-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500'
                 placeholder='Realm'
+                required
               />
             </div>
             <div className=''>

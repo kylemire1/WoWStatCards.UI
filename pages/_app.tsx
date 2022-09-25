@@ -9,6 +9,7 @@ import {
 import Seo from "../components/seo";
 import queryClient from "../lib/react-query/query-client";
 import NextNProgress from "nextjs-progressbar";
+import ErrorBoundary from "../components/error-boundary";
 
 function MyApp({
   Component,
@@ -18,14 +19,16 @@ function MyApp({
     <QueryClientProvider client={queryClient}>
       <Hydrate state={pageProps.dehydratedState}>
         <Seo />
-        <NextNProgress
-          startPosition={0.3}
-          stopDelayMs={200}
-          height={3}
-          showOnShallow={true}
-        />
+        <ErrorBoundary>
+          <NextNProgress
+            startPosition={0.3}
+            stopDelayMs={200}
+            height={3}
+            showOnShallow={true}
+          />
 
-        <Component {...pageProps} />
+          <Component {...pageProps} />
+        </ErrorBoundary>
       </Hydrate>
     </QueryClientProvider>
   );

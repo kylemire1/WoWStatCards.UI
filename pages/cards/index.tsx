@@ -2,8 +2,6 @@ import {
   dehydrate,
   DehydratedState,
   QueryClient,
-  useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
@@ -41,29 +39,23 @@ const Cards: NextPage = () => {
   const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery();
 
   if (cardsError instanceof Error) {
-    return (
-      <Layout>
-        <h1 className='font-bold text-4xl'>Cards</h1>
-        <div>
-          <h2>Sorry!</h2>
-          <p>There was a problem getting your stat cards.</p>
-          <p>{cardsError.message}</p>
-        </div>
-      </Layout>
-    );
+    throw cardsError;
   }
 
   return (
     <Layout>
       <Layout.Container>
         <h1 className='font-bold text-4xl mb-4'>Cards</h1>
-        <div className='flex flex-col w-full gap-4'>
+        <div className='grid md:grid-cols-2 w-full gap-4'>
           {cardsData?.map((c) => {
             return (
-              <div key={`stat_card_${c.id}`} className='flex gap-4'>
-                <Link href={`/card/edit/${c.id}`}>
-                  <a className='block rounded-lg shadow-slate-200 shadow-lg hover:outline hover:outline-solid hover:outline-blue-500 outline-2 outline-offset-2 w-min p-4'>
-                    <div className='grid grid-cols-[75px_150px] items-center'>
+              <div
+                key={`stat_card_${c.id}`}
+                className='flex flex-col md:flex-row gap-4'
+              >
+                <Link href={`/cards/edit/${c.id}`}>
+                  <a className='grow block rounded-lg shadow-slate-200 shadow-lg hover:outline hover:outline-solid hover:outline-blue-500 outline-2 outline-offset-2 p-4'>
+                    <div className='grid grid-cols-[75px_1fr] items-center'>
                       <div>
                         <Image
                           alt={c.characterName}
