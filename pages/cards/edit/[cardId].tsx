@@ -6,14 +6,17 @@ import {
 } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useRef } from "react";
 import { Layout } from "../../../components/layout";
 import StatCard from "../../../components/stat-card";
 import StatCardError from "../../../components/stat-card-error";
+import SvgBackground from "../../../components/svg-background";
 import { StatCardDto } from "../../../lib/generated-api/StatCardApi";
 import {
   getStatCard,
+  useGetCharacterStatsQuery,
   useGetStatCardQuery,
   useUpdateCardMutation,
 } from "../../../lib/react-query/fetchers";
@@ -64,11 +67,17 @@ const EditCard: NextPage<SSRProps> = (props) => {
     mutateAsync: updateCard,
     isLoading: updateIsLoading,
   } = useUpdateCardMutation({ queryClient });
-  const { data: charData, error: charError } = useGetStatCardQuery(
+  const { data: charDataFromDb, error: charError } = useGetStatCardQuery(
     props?.cardId
   );
+  const { data: statData } = useGetCharacterStatsQuery({
+    characterName: charDataFromDb?.characterName ?? "",
+    realm: charDataFromDb?.realm ?? "",
+  });
 
-  console.log(charData);
+  const charData = statData
+    ? { ...charDataFromDb, ...statData }
+    : charDataFromDb;
 
   if (!charData || charError instanceof Error) {
     return <StatCardError />;
@@ -84,9 +93,13 @@ const EditCard: NextPage<SSRProps> = (props) => {
     const formData = new FormData(formRef.current);
     const cardName = formData.get("card-name");
 
-    if (typeof cardName !== "string") return;
+    if (
+      typeof cardName !== "string" ||
+      typeof charData.characterName === "undefined"
+    )
+      return;
 
-    const statCardDto = new StatCardDto({
+    const statCardDto = StatCardDto.fromJS({
       ...charData,
       cardName,
     });
@@ -114,47 +127,40 @@ const EditCard: NextPage<SSRProps> = (props) => {
       <Layout.Container>
         <h1 className='font-bold text-4xl'>Edit</h1>
         {charData && (
-          <StatCard>
-            <h2 className='text-2xl font-bold'>{characterName}</h2>
-            <div className='flex gap-2'>
-              <div className='grid grid-cols-3 mb-2 gap-4'>
-                {Object.entries(stats).map(([statName, value]) => {
-                  return (
-                    <div key={`${statName}_${value}`}>
-                      <span className='font-bold block'>{statName}</span>
-                      <span>{value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className='relative render-wrapper w-full max-w-[260px]'>
-                <img
-                  className='absolute inset-0 h-full object-cover drop-shadow-xl'
+          <>
+            <StatCard>
+              <SvgBackground />
+              <div className='absolute top-0 bottom-0 left-8 right-8'>
+                <Image
                   src={renderUrl}
-                  alt={characterName}
+                  layout='fill'
+                  className='drop-shadow-lg'
                 />
               </div>
+            </StatCard>
+            <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
+              <form ref={formRef} method='post' onSubmit={handleUpdateCard}>
+                <fieldset disabled={updateIsLoading}>
+                  <div className='my-8'>
+                    <label htmlFor='card-name' className='font-bold'>
+                      Card Name
+                    </label>
+                    <br />
+                    <input
+                      id='card-name'
+                      name='card-name'
+                      type='text'
+                      defaultValue={cardName}
+                    />
+                  </div>
+                  <button type='submit'>Update Card</button>
+                </fieldset>
+                {updateError instanceof Error && (
+                  <div>{updateError.message}</div>
+                )}
+              </form>
             </div>
-
-            <form ref={formRef} method='post' onSubmit={handleUpdateCard}>
-              <fieldset disabled={updateIsLoading}>
-                <div className='my-8'>
-                  <label htmlFor='card-name' className='font-bold'>
-                    Card Name
-                  </label>
-                  <br />
-                  <input
-                    id='card-name'
-                    name='card-name'
-                    type='text'
-                    defaultValue={cardName}
-                  />
-                </div>
-                <button type='submit'>Update Card</button>
-              </fieldset>
-              {updateError instanceof Error && <div>{updateError.message}</div>}
-            </form>
-          </StatCard>
+          </>
         )}
       </Layout.Container>
     </Layout>

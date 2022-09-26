@@ -26,6 +26,8 @@ export const fetchCharacterStats: QueryFunction<
 > = async ({ queryKey }) => {
   const [_key, { characterName, realm }] = queryKey;
 
+  if (!realm || !characterName || realm === "" || characterName === "") return;
+
   try {
     const response = await characterStatsClient.get(
       characterName,
@@ -135,11 +137,13 @@ export const useGetStatCardQuery = (id?: number) => {
 
 export const useUpdateCardMutation = ({ queryClient }: MutationHookProps) => {
   const updateCard = useMutation(updateStatCard, {
-    onSuccess() {
-      queryClient.invalidateQueries(["statCard"], {
-        exact: true,
-        refetchType: "active",
-      });
+    onSuccess(data) {
+      if (data) {
+        queryClient.invalidateQueries(["statCard"], {
+          exact: true,
+          refetchType: "active",
+        });
+      }
     },
   });
 

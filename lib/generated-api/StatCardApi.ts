@@ -432,6 +432,7 @@ export class StatCardsClient implements IStatCardsClient {
 
 export class CharacterStats implements ICharacterStats {
   characterName!: string;
+  realm!: string;
   avatarUrl?: string | undefined;
   renderUrl?: string | undefined;
   health?: number | undefined;
@@ -470,6 +471,7 @@ export class CharacterStats implements ICharacterStats {
   init(_data?: any) {
     if (_data) {
       this.characterName = _data["characterName"];
+      this.realm = _data["realm"];
       this.avatarUrl = _data["avatarUrl"];
       this.renderUrl = _data["renderUrl"];
       this.health = _data["health"];
@@ -508,6 +510,7 @@ export class CharacterStats implements ICharacterStats {
   toJSON(data?: any) {
     data = typeof data === "object" ? data : {};
     data["characterName"] = this.characterName;
+    data["realm"] = this.realm;
     data["avatarUrl"] = this.avatarUrl;
     data["renderUrl"] = this.renderUrl;
     data["health"] = this.health;
@@ -539,6 +542,7 @@ export class CharacterStats implements ICharacterStats {
 
 export interface ICharacterStats {
   characterName: string;
+  realm: string;
   avatarUrl?: string | undefined;
   renderUrl?: string | undefined;
   health?: number | undefined;

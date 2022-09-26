@@ -59,6 +59,7 @@ export const getServerSideProps: GetServerSideProps<
 };
 
 const CreateCards: NextPage<SSRProps> = (props) => {
+  const printRef = React.useRef(null);
   const [cardName, setCardName] = useState("");
   const [selectedStats, setSelectedStats] = useState<Array<string>>([]);
   const router = useRouter();
@@ -97,6 +98,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     avatarUrl,
     renderUrl,
     characterName: characterName,
+    realm,
     ...stats
   } = charData;
 
@@ -117,6 +119,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         characterName,
         avatarUrl,
         renderUrl,
+        realm,
         factionId: charData.factionId,
       }
     );
@@ -129,23 +132,24 @@ const CreateCards: NextPage<SSRProps> = (props) => {
       router.push("/cards");
     }
   };
-
   return (
     <Layout>
       <Layout.Container>
         <h1 className='font-bold text-4xl'>Create</h1>
         {charData && (
           <>
-            <StatCard>
-              <SvgBackground />
-              <div className='absolute top-0 bottom-0 left-8 right-8'>
-                <Image
-                  src={renderUrl}
-                  layout='fill'
-                  className='drop-shadow-lg'
-                />
-              </div>
-            </StatCard>
+            <div ref={printRef}>
+              <StatCard>
+                <SvgBackground />
+                <div className='absolute top-0 bottom-0 left-8 right-8'>
+                  <Image
+                    src={renderUrl}
+                    layout='fill'
+                    className='drop-shadow-lg'
+                  />
+                </div>
+              </StatCard>
+            </div>
             <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
               <form method='post' onSubmit={handleSaveCard}>
                 <fieldset disabled={saveIsLoading}>

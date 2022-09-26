@@ -9,7 +9,6 @@ const HeroSearch = () => {
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     if (!formRef.current) return;
-    console.log("hello?");
 
     const formData = new FormData(formRef.current);
     const characterName = formData.get("characterName");
