@@ -24,11 +24,11 @@ const HeroSearch = () => {
 
   return (
     <div className='mx-auto max-w-md sm:max-w-3xl lg:max-w-7xl'>
-      <div className='relative overflow-hidden rounded-2xl bg-blue-500 px-6 py-10 shadow-xl sm:px-12 sm:py-20'>
+      <div className='relative overflow-hidden rounded-2xl bg-slate-900 px-6 py-10 shadow-xl sm:px-12 sm:py-20'>
         <SvgBackground />
         <div className='relative'>
           <div className='sm:text-center'>
-            <h2 className='text-3xl font-bold tracking-tight text-white sm:text-4xl'>
+            <h2 className='text-3xl font-bold tracking-tight text-blue-500 sm:text-4xl'>
               Character Finder
             </h2>
             <p className='mx-auto mt-6 max-w-2xl text-lg text-slate-100'>
@@ -69,7 +69,7 @@ const HeroSearch = () => {
             <div className=''>
               <button
                 type='submit'
-                className='block w-full rounded-md border border-transparent bg-gray-900 px-5 py-3 text-base font-medium text-white shadow hover:bg-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500 sm:px-10'
+                className='block w-full rounded-md border border-transparent bg-blue-500 px-5 py-3 text-base font-medium text-white shadow hover:bg-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500 sm:px-10'
               >
                 Find Character
               </button>
