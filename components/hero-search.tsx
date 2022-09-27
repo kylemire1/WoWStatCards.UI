@@ -1,25 +1,25 @@
-import { useRouter } from "next/router";
-import React, { FormEventHandler } from "react";
-import SvgBackground from "./svg-background";
+import { useRouter } from 'next/router'
+import React, { FormEventHandler } from 'react'
+import SvgBackground from './svg-background'
 
 const HeroSearch = () => {
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const router = useRouter();
+  const formRef = React.useRef<HTMLFormElement>(null)
+  const router = useRouter()
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
-    if (!formRef.current) return;
+    e.preventDefault()
+    if (!formRef.current) return
 
-    const formData = new FormData(formRef.current);
-    const characterName = formData.get("characterName");
-    const realm = formData.get("realm");
+    const formData = new FormData(formRef.current)
+    const characterName = formData.get('characterName')
+    const realm = formData.get('realm')
 
-    if (typeof characterName !== "string" || typeof realm !== "string") {
-      return;
+    if (typeof characterName !== 'string' || typeof realm !== 'string') {
+      return
     }
 
-    router.push(`/cards/create?characterName=${characterName}&realm=${realm}`);
-  };
+    router.push(`/cards/create?characterName=${characterName}&realm=${realm}`)
+  }
 
   return (
     <div className='mx-auto max-w-md sm:max-w-3xl lg:max-w-7xl'>
@@ -28,7 +28,7 @@ const HeroSearch = () => {
         <div className='relative'>
           <div className='sm:text-center'>
             <h2 className='text-3xl font-bold tracking-tight text-blue-500 sm:text-4xl'>
-              Character Finder
+              Warcraft Stat Cards
             </h2>
             <p className='mx-auto mt-6 max-w-2xl text-lg text-slate-100'>
               Find a World of Warcraft character by their name and realm.
@@ -77,7 +77,7 @@ const HeroSearch = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default HeroSearch;
+export default HeroSearch

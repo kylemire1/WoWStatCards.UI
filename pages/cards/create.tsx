@@ -1,53 +1,52 @@
-import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
-import { GetServerSideProps, NextPage } from "next";
-import Image from "next/image";
-import { useRouter } from "next/router";
-import React, { useState } from "react";
-import { Layout } from "../../components/layout";
-import StatCard from "../../components/stat-card";
-import StatCardError from "../../components/stat-card-error";
-import SvgBackground from "../../components/svg-background";
-import { StatCardDto } from "../../lib/generated-api/StatCardApi";
+import { dehydrate, DehydratedState, QueryClient } from '@tanstack/react-query'
+import { GetServerSideProps, NextPage } from 'next'
+import { useRouter } from 'next/router'
+import React, { useState } from 'react'
+import CharacterDisplay from '../../components/character-display'
+import { Layout } from '../../components/layout'
+import StatCardError from '../../components/stat-card-error'
+import { StatCardDto } from '../../lib/generated-api/StatCardApi'
 import {
   fetchCharacterStats,
   useGetCharacterStatsQuery,
   useSaveStatCardMutation,
-} from "../../lib/react-query/fetchers";
+} from '../../lib/react-query/fetchers'
+import { camelCaseToTitle } from '../../lib/utils'
 
 type SSRProps = {
-  characterName: string;
-  realm: string;
-  dehydratedState: DehydratedState;
-};
+  characterName: string
+  realm: string
+  dehydratedState: DehydratedState
+}
 
 type CreateCardParams = {
-  characterName?: string;
-  realm?: string;
-};
+  characterName?: string
+  realm?: string
+}
 
 export const getServerSideProps: GetServerSideProps<
   SSRProps,
   CreateCardParams
 > = async (context) => {
-  const params = context.query;
-  const characterName = params?.characterName;
-  const realm = params?.realm;
+  const params = context.query
+  const characterName = params?.characterName
+  const realm = params?.realm
 
-  if (typeof characterName !== "string" || typeof realm !== "string") {
+  if (typeof characterName !== 'string' || typeof realm !== 'string') {
     return {
       redirect: {
         permanent: false,
-        destination: "/",
+        destination: '/',
       },
-    };
+    }
   }
 
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient()
 
   await queryClient.prefetchQuery(
-    ["characterStats", { characterName, realm }],
+    ['characterStats', { characterName, realm }],
     fetchCharacterStats
-  );
+  )
 
   return {
     props: {
@@ -55,64 +54,62 @@ export const getServerSideProps: GetServerSideProps<
       characterName,
       realm,
     },
-  };
-};
+  }
+}
 
 const CreateCards: NextPage<SSRProps> = (props) => {
-  const printRef = React.useRef(null);
-  const [cardName, setCardName] = useState("");
-  const [selectedStats, setSelectedStats] = useState<Array<string>>([]);
-  const router = useRouter();
+  const [cardName, setCardName] = useState('')
+  const [selectedStats, setSelectedStats] = useState<Array<string>>([])
+  const router = useRouter()
   const {
     error: saveError,
     mutateAsync: saveCard,
     isLoading: saveIsLoading,
-  } = useSaveStatCardMutation();
+  } = useSaveStatCardMutation()
   const { error: charError, data: charData } = useGetCharacterStatsQuery({
     characterName: props.characterName,
     realm: props.realm,
-  });
+  })
 
   if (!charData || charError instanceof Error) {
-    return (
-      <StatCardError characterName={props.characterName} realm={props.realm} />
-    );
+    return <StatCardError characterName={props.characterName} realm={props.realm} />
   }
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardName(e.target.value);
-  };
-
-  const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-
-    if (checked) {
-      setSelectedStats([...selectedStats, e.target.value]);
-      return;
-    }
-
-    setSelectedStats([...selectedStats.filter((s) => s !== e.target.value)]);
-  };
 
   const {
     avatarUrl,
     renderUrl,
     characterName: characterName,
     realm,
+    factionId,
     ...stats
-  } = charData;
+  } = charData
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardName(e.target.value)
+  }
+
+  const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
+
+    if (checked) {
+      setSelectedStats([...selectedStats, e.target.value])
+      return
+    }
+
+    setSelectedStats([...selectedStats.filter((s) => s !== e.target.value)])
+  }
 
   const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (cardName === "" || selectedStats.length === 0) return;
+    if (cardName === '' || selectedStats.length === 0) return
 
     const statCardData = selectedStats.reduce<Record<string, number | string>>(
       (prevValue, currValue) => {
-        const statCopy: Record<string, number> = { ...stats };
-        prevValue[currValue] = statCopy[currValue];
+        const statCopy: Record<string, number> = { ...stats }
+        prevValue[currValue] = statCopy[currValue]
 
-        return prevValue;
+        return prevValue
       },
       {
         cardName,
@@ -122,34 +119,24 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         realm,
         factionId: charData.factionId,
       }
-    );
+    )
 
-    const statCardDto = StatCardDto.fromJS(statCardData);
+    const statCardDto = StatCardDto.fromJS(statCardData)
 
-    const result = await saveCard(statCardDto);
+    const result = await saveCard(statCardDto)
 
-    if (typeof result.id === "number") {
-      router.push("/cards");
+    if (typeof result.id === 'number') {
+      router.push('/cards')
     }
-  };
+  }
+
   return (
     <Layout>
       <Layout.Container>
         <h1 className='font-bold text-4xl'>Create</h1>
         {charData && (
           <>
-            <div ref={printRef}>
-              <StatCard>
-                <SvgBackground />
-                <div className='absolute top-0 bottom-0 left-8 right-8'>
-                  <Image
-                    src={renderUrl}
-                    layout='fill'
-                    className='drop-shadow-lg'
-                  />
-                </div>
-              </StatCard>
-            </div>
+            <CharacterDisplay selectedStats={selectedStats} charData={charData} />
             <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
               <form method='post' onSubmit={handleSaveCard}>
                 <fieldset disabled={saveIsLoading}>
@@ -167,28 +154,33 @@ const CreateCards: NextPage<SSRProps> = (props) => {
                     />
                   </div>
                   <fieldset className='mb-4'>
-                    <legend className='mb-4'>
-                      Stats to Display (Choose up to 8)
-                    </legend>
+                    <legend className='mb-4'>Stats to Display (Choose up to 8)</legend>
                     <div className='grid gap-2 md:grid-cols-2'>
                       {Object.keys(stats).map((statName) => {
                         return (
-                          <label key={`stat_${statName}`}>
+                          <label
+                            key={`stat_${statName}`}
+                            className={
+                              !selectedStats.includes(statName) &&
+                              selectedStats.length === 8
+                                ? 'opacity-50'
+                                : 'opacity-100'
+                            }
+                          >
                             <input
                               type='checkbox'
                               name={statName}
                               value={statName}
-                              className='mr-2'
+                              className='mr-2 disabled:opacity-50'
                               onChange={handleCheckbox}
+                              disabled={
+                                !selectedStats.includes(statName) &&
+                                selectedStats.length === 8
+                              }
                             />
-                            {statName // insert a space before all caps
-                              .replace(/([A-Z])/g, " $1")
-                              // uppercase the first character
-                              .replace(/^./, function (str) {
-                                return str.toUpperCase();
-                              })}
+                            {camelCaseToTitle(statName)}
                           </label>
-                        );
+                        )
                       })}
                     </div>
                   </fieldset>
@@ -206,7 +198,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         )}
       </Layout.Container>
     </Layout>
-  );
-};
+  )
+}
 
-export default CreateCards;
+export default CreateCards
