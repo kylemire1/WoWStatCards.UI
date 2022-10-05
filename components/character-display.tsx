@@ -19,13 +19,15 @@ const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) =>
     ...stats
   } = charData
 
-  const selectedStatEntries = selectedStats.map((statName) => {
-    const statKey = statName as keyof typeof stats
-    const statValue = stats[statKey]
-    if (statValue === undefined || typeof statValue === 'string') return
+  const selectedStatEntries = selectedStats
+    .map((statName) => {
+      const statKey = statName as keyof typeof stats
+      const statValue = stats[statKey]
+      if (statValue === undefined || typeof statValue === 'string') return
 
-    return [camelCaseToTitle(statName), Math.round(statValue)]
-  })
+      return [camelCaseToTitle(statName), Math.round(statValue)]
+    })
+    .filter(Boolean)
 
   return (
     <div>
@@ -54,6 +56,9 @@ const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) =>
               <StatItem stat={selectedStatEntries[7]} />
             </ul>
           </div>
+        </div>
+        <div className='absolute bottom-8 left-1/2 transform -translate-x-1/2'>
+          <p className='text-white text-center font-bold text-2xl'>{characterName}</p>
         </div>
       </StatCard>
     </div>
