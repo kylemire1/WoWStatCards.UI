@@ -10,14 +10,7 @@ type CharacterDisplayProps = {
   selectedStats: Array<string>
 }
 const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) => {
-  const {
-    avatarUrl,
-    renderUrl,
-    characterName: characterName,
-    realm,
-    factionId,
-    ...stats
-  } = charData
+  const { avatarUrl, renderUrl, characterName, realm, factionId, ...stats } = charData
 
   const selectedStatEntries = selectedStats
     .map((statName) => {
@@ -40,6 +33,7 @@ const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) =>
               layout='fill'
               className='drop-shadow-lg'
               alt={`${characterName}'s appearance`}
+              priority
             />
           ) : null}
           <div className='grid grid-cols-2 gap-28 sm:gap-64 md:gap-72 my-0 mx-auto w-full z-40'>

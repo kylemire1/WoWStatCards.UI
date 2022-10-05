@@ -1,16 +1,12 @@
-import Head from "next/head";
-
-const DOMAIN = "https://www.jimraptis.com";
-const DEFAULT_OG_IMAGE =
-  "https://storage.googleapis.com/brandflow-bucket/personal/blog/portfolio-og.jpg";
+import Head from 'next/head'
 
 export default function Seo({
-  title = "Wow Stat Card Generator",
-  description = "Generate stat cards for a World of Warcraft character, following the tradition of video game forum signatures.",
-  siteName = "Wow Stat Cards",
+  title = 'Wow Stat Card Generator',
+  description = 'Generate stat cards for a World of Warcraft character, following the tradition of video game forum signatures.',
+  siteName = 'Wow Stat Cards',
   // canonical = DOMAIN,
-  ogType = "website",
-  twitterHandle = "@kylelemire1",
+  ogType = 'website',
+  twitterHandle = '@kylelemire1',
 }) {
   return (
     <Head>
@@ -18,11 +14,7 @@ export default function Seo({
       <meta name='description' content={description} />
       <meta key='og_type' property='og:type' content={ogType} />
       <meta key='og_title' property='og:title' content={title} />
-      <meta
-        key='og_description'
-        property='og:description'
-        content={description}
-      />
+      <meta key='og_description' property='og:description' content={description} />
       <meta key='og_locale' property='og:locale' content='en_IE' />
       <meta key='og_site_name' property='og:site_name' content={siteName} />
       {/* <meta key='og_url' property='og:url' content={canonical ?? DOMAIN} /> */}
@@ -42,17 +34,9 @@ export default function Seo({
 
       <meta name='robots' content='index,follow' />
 
-      <meta
-        key='twitter:card'
-        name='twitter:card'
-        content='summary_large_image'
-      />
+      <meta key='twitter:card' name='twitter:card' content='summary_large_image' />
       <meta key='twitter:site' name='twitter:site' content={twitterHandle} />
-      <meta
-        key='twitter:creator'
-        name='twitter:creator'
-        content={twitterHandle}
-      />
+      <meta key='twitter:creator' name='twitter:creator' content={twitterHandle} />
       <meta key='twitter:title' property='twitter:title' content={title} />
       <meta
         key='twitter:description'
@@ -64,5 +48,5 @@ export default function Seo({
 
       <link rel='shortcut icon' href='/favicon.ico' />
     </Head>
-  );
+  )
 }

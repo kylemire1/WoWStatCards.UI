@@ -1,6 +1,5 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
+import React from 'react'
+import Link from 'next/link'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -27,13 +26,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </span>
       </footer>
     </>
-  );
-};
+  )
+}
 
 export const Container = ({ children }: { children: React.ReactNode }) => {
-  return <div className='max-w-4xl px-4 md:px-2 m-auto'>{children}</div>;
-};
+  return <div className='max-w-4xl px-4 md:px-2 m-auto'>{children}</div>
+}
 
-Layout.Container = Container;
+Layout.Container = Container
 
-export { Layout };
+export { Layout }

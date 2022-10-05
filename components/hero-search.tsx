@@ -17,8 +17,9 @@ const HeroSearch = () => {
     if (typeof characterName !== 'string' || typeof realm !== 'string') {
       return
     }
+    const queryString = new URLSearchParams({ characterName, realm })
 
-    router.push(`/cards/create?characterName=${characterName}&realm=${realm}`)
+    router.push(`/cards/create?${queryString}`)
   }
 
   return (
