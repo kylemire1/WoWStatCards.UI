@@ -9,11 +9,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import { Layout } from '../../components/layout'
+import { listStatCards } from '../../lib/react-query/fetchers'
 import {
-  listStatCards,
   useDeleteStatCardMutation,
   useGetAllStatCardsQuery,
-} from '../../lib/react-query/fetchers'
+} from '../../lib/react-query/hooks'
 
 type SSRProps = {
   dehydratedState: DehydratedState

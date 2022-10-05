@@ -10,22 +10,17 @@ type CharacterDisplayProps = {
   selectedStats: Array<string>
 }
 const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) => {
-  const {
-    avatarUrl,
-    renderUrl,
-    characterName: characterName,
-    realm,
-    factionId,
-    ...stats
-  } = charData
+  const { avatarUrl, renderUrl, characterName, realm, factionId, ...stats } = charData
 
-  const selectedStatEntries = selectedStats.map((statName) => {
-    const statKey = statName as keyof typeof stats
-    const statValue = stats[statKey]
-    if (statValue === undefined || typeof statValue === 'string') return
+  const selectedStatEntries = selectedStats
+    .map((statName) => {
+      const statKey = statName as keyof typeof stats
+      const statValue = stats[statKey]
+      if (statValue === undefined || typeof statValue === 'string') return
 
-    return [camelCaseToTitle(statName), Math.round(statValue)]
-  })
+      return [camelCaseToTitle(statName), Math.round(statValue)]
+    })
+    .filter(Boolean)
 
   return (
     <div>
@@ -38,6 +33,7 @@ const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) =>
               layout='fill'
               className='drop-shadow-lg'
               alt={`${characterName}'s appearance`}
+              priority
             />
           ) : null}
           <div className='grid grid-cols-2 gap-28 sm:gap-64 md:gap-72 my-0 mx-auto w-full z-40'>
@@ -54,6 +50,9 @@ const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) =>
               <StatItem stat={selectedStatEntries[7]} />
             </ul>
           </div>
+        </div>
+        <div className='absolute bottom-8 left-1/2 transform -translate-x-1/2'>
+          <p className='text-white text-center font-bold text-2xl'>{characterName}</p>
         </div>
       </StatCard>
     </div>

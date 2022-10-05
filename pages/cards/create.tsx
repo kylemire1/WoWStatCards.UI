@@ -5,13 +5,13 @@ import React, { useState } from 'react'
 import CharacterDisplay from '../../components/character-display'
 import { Layout } from '../../components/layout'
 import StatCardError from '../../components/stat-card-error'
+import StatCardForm from '../../components/stat-card-form'
 import { StatCardDto } from '../../lib/generated-api/StatCardApi'
+import { fetchCharacterStats } from '../../lib/react-query/fetchers'
 import {
-  fetchCharacterStats,
-  useGetCharacterStatsQuery,
   useSaveStatCardMutation,
-} from '../../lib/react-query/fetchers'
-import { camelCaseToTitle } from '../../lib/utils'
+  useGetCharacterStatsQuery,
+} from '../../lib/react-query/hooks'
 
 type SSRProps = {
   characterName: string
@@ -138,61 +138,16 @@ const CreateCards: NextPage<SSRProps> = (props) => {
           <>
             <CharacterDisplay selectedStats={selectedStats} charData={charData} />
             <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
-              <form method='post' onSubmit={handleSaveCard}>
-                <fieldset disabled={saveIsLoading}>
-                  <div className='my-8'>
-                    <label htmlFor='card-name' className='font-bold'>
-                      Card Name
-                    </label>
-                    <br />
-                    <input
-                      onChange={handleNameChange}
-                      id='card-name'
-                      name='card-name'
-                      type='text'
-                      className='rounded w-full focus:ring-offset-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:ring-offset-white'
-                    />
-                  </div>
-                  <fieldset className='mb-4'>
-                    <legend className='mb-4'>Stats to Display (Choose up to 8)</legend>
-                    <div className='grid gap-2 md:grid-cols-2'>
-                      {Object.keys(stats).map((statName) => {
-                        return (
-                          <label
-                            key={`stat_${statName}`}
-                            className={
-                              !selectedStats.includes(statName) &&
-                              selectedStats.length === 8
-                                ? 'opacity-50'
-                                : 'opacity-100'
-                            }
-                          >
-                            <input
-                              type='checkbox'
-                              name={statName}
-                              value={statName}
-                              className='mr-2 disabled:opacity-50'
-                              onChange={handleCheckbox}
-                              disabled={
-                                !selectedStats.includes(statName) &&
-                                selectedStats.length === 8
-                              }
-                            />
-                            {camelCaseToTitle(statName)}
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </fieldset>
-                  <button
-                    className='focus:ring-blue-500 focus:outline-none focus:border-transparent  focus:ring focus:ring-offset-2 focus-ring-offset-white'
-                    type='submit'
-                  >
-                    Save Card
-                  </button>
-                </fieldset>
-                {saveError instanceof Error && <div>{saveError.message}</div>}
-              </form>
+              <StatCardForm
+                cardNameValue={cardName}
+                statData={stats}
+                selectedStats={selectedStats}
+                handleNameChange={handleNameChange}
+                handleStatCheckboxChange={handleCheckbox}
+                handleFormSubmit={handleSaveCard}
+                disableAllInputs={saveIsLoading}
+                error={saveError}
+              />
             </div>
           </>
         )}
