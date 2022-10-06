@@ -12,6 +12,7 @@
     "@tailwindcss/forms": "^0.5.3",
     "@tanstack/react-query": "^4.3.8",
     "axios": "^0.27.2",
+    "isomorphic-fetch": "^3.0.0",
     "next": "12.3.0",
     "nextjs-progressbar": "^0.0.14",
     "react": "18.2.0",
@@ -20,6 +21,7 @@
     "react-loader-spinner": "^5.3.4"
   },
   "devDependencies": {
+    "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "18.7.18",
     "@types/react": "18.0.20",
     "@types/react-dom": "18.0.6",

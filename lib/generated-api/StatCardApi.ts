@@ -8,31 +8,27 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-import axios, { AxiosError } from "axios";
-import type {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  CancelToken,
-} from "axios";
-
 export interface ICharacterStatsClient {
   get(
     characterName: string | null | undefined,
     realm: string | null | undefined,
     clientId: string | null | undefined
-  ): Promise<StatDto>;
+  ): Promise<ApiResponse>;
 }
 
 export class CharacterStatsClient implements ICharacterStatsClient {
-  private instance: AxiosInstance;
+  private http: {
+    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
+  };
   private baseUrl: string;
   protected jsonParseReviver: ((key: string, value: any) => any) | undefined =
     undefined;
 
-  constructor(baseUrl?: string, instance?: AxiosInstance) {
-    this.instance = instance ? instance : axios.create();
-
+  constructor(
+    baseUrl?: string,
+    http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }
+  ) {
+    this.http = http ? http : (window as any);
     this.baseUrl =
       baseUrl !== undefined && baseUrl !== null
         ? baseUrl
@@ -42,9 +38,8 @@ export class CharacterStatsClient implements ICharacterStatsClient {
   get(
     characterName: string | null | undefined,
     realm: string | null | undefined,
-    clientId: string | null | undefined,
-    cancelToken?: CancelToken | undefined
-  ): Promise<StatDto> {
+    clientId: string | null | undefined
+  ): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/CharacterStats?";
     if (characterName !== undefined && characterName !== null)
       url_ += "characterName=" + encodeURIComponent("" + characterName) + "&";
@@ -54,267 +49,218 @@ export class CharacterStatsClient implements ICharacterStatsClient {
       url_ += "clientId=" + encodeURIComponent("" + clientId) + "&";
     url_ = url_.replace(/[?&]$/, "");
 
-    let options_: AxiosRequestConfig = {
+    let options_: RequestInit = {
       method: "GET",
-      url: url_,
       headers: {
         Accept: "application/json",
       },
-      cancelToken,
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processGet(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processGet(_response);
+    });
   }
 
-  protected processGet(response: AxiosResponse): Promise<StatDto> {
+  protected processGet(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      let result200: any = null;
-      let resultData200 = _responseText;
-      result200 = StatDto.fromJS(resultData200);
-      return Promise.resolve<StatDto>(result200);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<StatDto>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 }
 
 export interface IStatCardsClient {
-  getAll(): Promise<StatCardDto[]>;
-  post(statCardDto: StatCardDto): Promise<StatCardDto>;
-  get(id: number): Promise<StatCardDto>;
-  put(id: number, statCardDto: StatCardDto): Promise<StatCardDto>;
-  delete(id: number): Promise<void>;
+  get(): Promise<ApiResponse>;
+
+  post(statCardDto: StatCardDto): Promise<ApiResponse>;
+
+  get2(id: number): Promise<ApiResponse>;
+
+  put(id: number, statCardDto: StatCardDto): Promise<ApiResponse>;
+
+  delete(id: number): Promise<ApiResponse>;
 }
 
 export class StatCardsClient implements IStatCardsClient {
-  private instance: AxiosInstance;
+  private http: {
+    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
+  };
   private baseUrl: string;
   protected jsonParseReviver: ((key: string, value: any) => any) | undefined =
     undefined;
 
-  constructor(baseUrl?: string, instance?: AxiosInstance) {
-    this.instance = instance ? instance : axios.create();
-
+  constructor(
+    baseUrl?: string,
+    http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }
+  ) {
+    this.http = http ? http : (window as any);
     this.baseUrl =
       baseUrl !== undefined && baseUrl !== null
         ? baseUrl
         : "https://wowstatcardsapi.azurewebsites.net";
   }
 
-  getAll(cancelToken?: CancelToken | undefined): Promise<StatCardDto[]> {
+  get(): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/StatCards";
     url_ = url_.replace(/[?&]$/, "");
 
-    let options_: AxiosRequestConfig = {
+    let options_: RequestInit = {
       method: "GET",
-      url: url_,
       headers: {
         Accept: "application/json",
       },
-      cancelToken,
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processGetAll(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processGet(_response);
+    });
   }
 
-  protected processGetAll(response: AxiosResponse): Promise<StatCardDto[]> {
+  protected processGet(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      let result200: any = null;
-      let resultData200 = _responseText;
-      if (Array.isArray(resultData200)) {
-        result200 = [] as any;
-        for (let item of resultData200)
-          result200!.push(StatCardDto.fromJS(item));
-      } else {
-        result200 = <any>null;
-      }
-      return Promise.resolve<StatCardDto[]>(result200);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<StatCardDto[]>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 
-  post(
-    statCardDto: StatCardDto,
-    cancelToken?: CancelToken | undefined
-  ): Promise<StatCardDto> {
+  post(statCardDto: StatCardDto): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/StatCards";
     url_ = url_.replace(/[?&]$/, "");
 
     const content_ = JSON.stringify(statCardDto);
 
-    let options_: AxiosRequestConfig = {
-      data: content_,
+    let options_: RequestInit = {
+      body: content_,
       method: "POST",
-      url: url_,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      cancelToken,
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processPost(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processPost(_response);
+    });
   }
 
-  protected processPost(response: AxiosResponse): Promise<StatCardDto> {
+  protected processPost(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      let result200: any = null;
-      let resultData200 = _responseText;
-      result200 = StatCardDto.fromJS(resultData200);
-      return Promise.resolve<StatCardDto>(result200);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<StatCardDto>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 
-  get(id: number, cancelToken?: CancelToken | undefined): Promise<StatCardDto> {
+  get2(id: number): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/StatCards/{id}";
     if (id === undefined || id === null)
       throw new Error("The parameter 'id' must be defined.");
     url_ = url_.replace("{id}", encodeURIComponent("" + id));
     url_ = url_.replace(/[?&]$/, "");
 
-    let options_: AxiosRequestConfig = {
+    let options_: RequestInit = {
       method: "GET",
-      url: url_,
       headers: {
         Accept: "application/json",
       },
-      cancelToken,
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processGet(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processGet2(_response);
+    });
   }
 
-  protected processGet(response: AxiosResponse): Promise<StatCardDto> {
+  protected processGet2(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      let result200: any = null;
-      let resultData200 = _responseText;
-      result200 = StatCardDto.fromJS(resultData200);
-      return Promise.resolve<StatCardDto>(result200);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<StatCardDto>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 
-  put(
-    id: number,
-    statCardDto: StatCardDto,
-    cancelToken?: CancelToken | undefined
-  ): Promise<StatCardDto> {
+  put(id: number, statCardDto: StatCardDto): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/StatCards/{id}";
     if (id === undefined || id === null)
       throw new Error("The parameter 'id' must be defined.");
@@ -323,227 +269,173 @@ export class StatCardsClient implements IStatCardsClient {
 
     const content_ = JSON.stringify(statCardDto);
 
-    let options_: AxiosRequestConfig = {
-      data: content_,
+    let options_: RequestInit = {
+      body: content_,
       method: "PUT",
-      url: url_,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      cancelToken,
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processPut(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processPut(_response);
+    });
   }
 
-  protected processPut(response: AxiosResponse): Promise<StatCardDto> {
+  protected processPut(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      let result200: any = null;
-      let resultData200 = _responseText;
-      result200 = StatCardDto.fromJS(resultData200);
-      return Promise.resolve<StatCardDto>(result200);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<StatCardDto>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 
-  delete(id: number, cancelToken?: CancelToken | undefined): Promise<void> {
+  delete(id: number): Promise<ApiResponse> {
     let url_ = this.baseUrl + "/api/StatCards/{id}";
     if (id === undefined || id === null)
       throw new Error("The parameter 'id' must be defined.");
     url_ = url_.replace("{id}", encodeURIComponent("" + id));
     url_ = url_.replace(/[?&]$/, "");
 
-    let options_: AxiosRequestConfig = {
+    let options_: RequestInit = {
       method: "DELETE",
-      url: url_,
-      headers: {},
-      cancelToken,
+      headers: {
+        Accept: "application/json",
+      },
     };
 
-    return this.instance
-      .request(options_)
-      .catch((_error: any) => {
-        if (isAxiosError(_error) && _error.response) {
-          return _error.response;
-        } else {
-          throw _error;
-        }
-      })
-      .then((_response: AxiosResponse) => {
-        return this.processDelete(_response);
-      });
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processDelete(_response);
+    });
   }
 
-  protected processDelete(response: AxiosResponse): Promise<void> {
+  protected processDelete(response: Response): Promise<ApiResponse> {
     const status = response.status;
     let _headers: any = {};
-    if (response.headers && typeof response.headers === "object") {
-      for (let k in response.headers) {
-        if (response.headers.hasOwnProperty(k)) {
-          _headers[k] = response.headers[k];
-        }
-      }
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
     }
     if (status === 200) {
-      const _responseText = response.data;
-      return Promise.resolve<void>(null as any);
+      return response.text().then((_responseText) => {
+        let result200: any = null;
+        result200 =
+          _responseText === ""
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
+        return result200;
+      });
     } else if (status !== 200 && status !== 204) {
-      const _responseText = response.data;
-      return throwException(
-        "An unexpected server error occurred.",
-        status,
-        _responseText,
-        _headers
-      );
+      return response.text().then((_responseText) => {
+        return throwException(
+          "An unexpected server error occurred.",
+          status,
+          _responseText,
+          _headers
+        );
+      });
     }
-    return Promise.resolve<void>(null as any);
+    return Promise.resolve<ApiResponse>(null as any);
   }
 }
 
-export class CharacterStats implements ICharacterStats {
-  characterName!: string;
-  avgItemLevel!: number;
-  realm!: string;
-  avatarUrl?: string | undefined;
-  renderUrl?: string | undefined;
-  health?: number | undefined;
-  strength?: number | undefined;
-  agility?: number | undefined;
-  intellect?: number | undefined;
-  stamina?: number | undefined;
-  meleeCrit?: number | undefined;
-  meleeHaste?: number | undefined;
-  mastery?: number | undefined;
-  bonusArmor?: number | undefined;
-  lifesteal?: number | undefined;
-  versatility?: number | undefined;
-  attackPower?: number | undefined;
-  mainHandDamageMin?: number | undefined;
-  mainHandDamageMax?: number | undefined;
-  mainHandSpeed?: number | undefined;
-  mainHandDps?: number | undefined;
-  offHandDamageMin?: number | undefined;
-  offHandDamageMax?: number | undefined;
-  offHandSpeed?: number | undefined;
-  offHandDps?: number | undefined;
-  spellPower?: number | undefined;
-  spellCrit?: number | undefined;
-  armor?: number | undefined;
-
-  constructor(data?: ICharacterStats) {
-    if (data) {
-      for (var property in data) {
-        if (data.hasOwnProperty(property))
-          (<any>this)[property] = (<any>data)[property];
-      }
-    }
-  }
-
-  init(_data?: any) {
-    if (_data) {
-      this.characterName = _data["characterName"];
-      this.avgItemLevel = _data["avgItemLevel"];
-      this.realm = _data["realm"];
-      this.avatarUrl = _data["avatarUrl"];
-      this.renderUrl = _data["renderUrl"];
-      this.health = _data["health"];
-      this.strength = _data["strength"];
-      this.agility = _data["agility"];
-      this.intellect = _data["intellect"];
-      this.stamina = _data["stamina"];
-      this.meleeCrit = _data["meleeCrit"];
-      this.meleeHaste = _data["meleeHaste"];
-      this.mastery = _data["mastery"];
-      this.bonusArmor = _data["bonusArmor"];
-      this.lifesteal = _data["lifesteal"];
-      this.versatility = _data["versatility"];
-      this.attackPower = _data["attackPower"];
-      this.mainHandDamageMin = _data["mainHandDamageMin"];
-      this.mainHandDamageMax = _data["mainHandDamageMax"];
-      this.mainHandSpeed = _data["mainHandSpeed"];
-      this.mainHandDps = _data["mainHandDps"];
-      this.offHandDamageMin = _data["offHandDamageMin"];
-      this.offHandDamageMax = _data["offHandDamageMax"];
-      this.offHandSpeed = _data["offHandSpeed"];
-      this.offHandDps = _data["offHandDps"];
-      this.spellPower = _data["spellPower"];
-      this.spellCrit = _data["spellCrit"];
-      this.armor = _data["armor"];
-    }
-  }
-
-  static fromJS(data: any): CharacterStats {
-    data = typeof data === "object" ? data : {};
-    let result = new CharacterStats();
-    result.init(data);
-    return result;
-  }
-
-  toJSON(data?: any) {
-    data = typeof data === "object" ? data : {};
-    data["characterName"] = this.characterName;
-    data["avgItemLevel"] = this.avgItemLevel;
-    data["realm"] = this.realm;
-    data["avatarUrl"] = this.avatarUrl;
-    data["renderUrl"] = this.renderUrl;
-    data["health"] = this.health;
-    data["strength"] = this.strength;
-    data["agility"] = this.agility;
-    data["intellect"] = this.intellect;
-    data["stamina"] = this.stamina;
-    data["meleeCrit"] = this.meleeCrit;
-    data["meleeHaste"] = this.meleeHaste;
-    data["mastery"] = this.mastery;
-    data["bonusArmor"] = this.bonusArmor;
-    data["lifesteal"] = this.lifesteal;
-    data["versatility"] = this.versatility;
-    data["attackPower"] = this.attackPower;
-    data["mainHandDamageMin"] = this.mainHandDamageMin;
-    data["mainHandDamageMax"] = this.mainHandDamageMax;
-    data["mainHandSpeed"] = this.mainHandSpeed;
-    data["mainHandDps"] = this.mainHandDps;
-    data["offHandDamageMin"] = this.offHandDamageMin;
-    data["offHandDamageMax"] = this.offHandDamageMax;
-    data["offHandSpeed"] = this.offHandSpeed;
-    data["offHandDps"] = this.offHandDps;
-    data["spellPower"] = this.spellPower;
-    data["spellCrit"] = this.spellCrit;
-    data["armor"] = this.armor;
-    return data;
-  }
+export interface ApiResponse {
+  statusCode: HttpStatusCode;
+  isSuccess: boolean;
+  errorMessages: string[];
+  result: any;
 }
 
-export interface ICharacterStats {
+export enum HttpStatusCode {
+  Continue = 100,
+  SwitchingProtocols = 101,
+  Processing = 102,
+  EarlyHints = 103,
+  OK = 200,
+  Created = 201,
+  Accepted = 202,
+  NonAuthoritativeInformation = 203,
+  NoContent = 204,
+  ResetContent = 205,
+  PartialContent = 206,
+  MultiStatus = 207,
+  AlreadyReported = 208,
+  IMUsed = 226,
+  MultipleChoices = 300,
+  Ambiguous = 300,
+  MovedPermanently = 301,
+  Moved = 301,
+  Found = 302,
+  Redirect = 302,
+  SeeOther = 303,
+  RedirectMethod = 303,
+  NotModified = 304,
+  UseProxy = 305,
+  Unused = 306,
+  TemporaryRedirect = 307,
+  RedirectKeepVerb = 307,
+  PermanentRedirect = 308,
+  BadRequest = 400,
+  Unauthorized = 401,
+  PaymentRequired = 402,
+  Forbidden = 403,
+  NotFound = 404,
+  MethodNotAllowed = 405,
+  NotAcceptable = 406,
+  ProxyAuthenticationRequired = 407,
+  RequestTimeout = 408,
+  Conflict = 409,
+  Gone = 410,
+  LengthRequired = 411,
+  PreconditionFailed = 412,
+  RequestEntityTooLarge = 413,
+  RequestUriTooLong = 414,
+  UnsupportedMediaType = 415,
+  RequestedRangeNotSatisfiable = 416,
+  ExpectationFailed = 417,
+  MisdirectedRequest = 421,
+  UnprocessableEntity = 422,
+  Locked = 423,
+  FailedDependency = 424,
+  UpgradeRequired = 426,
+  PreconditionRequired = 428,
+  TooManyRequests = 429,
+  RequestHeaderFieldsTooLarge = 431,
+  UnavailableForLegalReasons = 451,
+  InternalServerError = 500,
+  NotImplemented = 501,
+  BadGateway = 502,
+  ServiceUnavailable = 503,
+  GatewayTimeout = 504,
+  HttpVersionNotSupported = 505,
+  VariantAlsoNegotiates = 506,
+  InsufficientStorage = 507,
+  LoopDetected = 508,
+  NotExtended = 510,
+  NetworkAuthenticationRequired = 511,
+}
+
+export interface CharacterStats {
   characterName: string;
   avgItemLevel: number;
   realm: string;
@@ -574,42 +466,10 @@ export interface ICharacterStats {
   armor?: number | undefined;
 }
 
-export class StatDto extends CharacterStats implements IStatDto {
-  avatarUrl!: string;
-  renderUrl!: string;
-  factionId!: FactionEnum;
-
-  constructor(data?: IStatDto) {
-    super(data);
-  }
-
-  override init(_data?: any) {
-    super.init(_data);
-    if (_data) {
-      this.avatarUrl = _data["avatarUrl"];
-      this.renderUrl = _data["renderUrl"];
-      this.factionId = _data["factionId"];
-    }
-  }
-
-  static override fromJS(data: any): StatDto {
-    data = typeof data === "object" ? data : {};
-    let result = new StatDto();
-    result.init(data);
-    return result;
-  }
-
-  override toJSON(data?: any) {
-    data = typeof data === "object" ? data : {};
-    data["avatarUrl"] = this.avatarUrl;
-    data["renderUrl"] = this.renderUrl;
-    data["factionId"] = this.factionId;
-    super.toJSON(data);
-    return data;
-  }
-}
-
-export interface IStatDto extends ICharacterStats {
+export interface StatCardDto extends CharacterStats {
+  id?: number | undefined;
+  cardName: string;
+  characterName: string;
   avatarUrl: string;
   renderUrl: string;
   factionId: FactionEnum;
@@ -618,59 +478,6 @@ export interface IStatDto extends ICharacterStats {
 export enum FactionEnum {
   Alliance = 1,
   Horde = 2,
-}
-
-export class StatCardDto extends CharacterStats implements IStatCardDto {
-  id?: number | undefined;
-  cardName!: string;
-  characterName!: string;
-  avatarUrl!: string;
-  renderUrl!: string;
-  factionId!: FactionEnum;
-
-  constructor(data?: IStatCardDto) {
-    super(data);
-  }
-
-  override init(_data?: any) {
-    super.init(_data);
-    if (_data) {
-      this.id = _data["id"];
-      this.cardName = _data["cardName"];
-      this.characterName = _data["characterName"];
-      this.avatarUrl = _data["avatarUrl"];
-      this.renderUrl = _data["renderUrl"];
-      this.factionId = _data["factionId"];
-    }
-  }
-
-  static override fromJS(data: any): StatCardDto {
-    data = typeof data === "object" ? data : {};
-    let result = new StatCardDto();
-    result.init(data);
-    return result;
-  }
-
-  override toJSON(data?: any) {
-    data = typeof data === "object" ? data : {};
-    data["id"] = this.id;
-    data["cardName"] = this.cardName;
-    data["characterName"] = this.characterName;
-    data["avatarUrl"] = this.avatarUrl;
-    data["renderUrl"] = this.renderUrl;
-    data["factionId"] = this.factionId;
-    super.toJSON(data);
-    return data;
-  }
-}
-
-export interface IStatCardDto extends ICharacterStats {
-  id?: number | undefined;
-  cardName: string;
-  characterName: string;
-  avatarUrl: string;
-  renderUrl: string;
-  factionId: FactionEnum;
 }
 
 export class ApiException extends Error {
@@ -712,8 +519,4 @@ function throwException(
 ): any {
   if (result !== null && result !== undefined) throw result;
   else throw new ApiException(message, status, response, headers, null);
-}
-
-function isAxiosError(obj: any | undefined): obj is AxiosError {
-  return obj && obj.isAxiosError === true;
 }

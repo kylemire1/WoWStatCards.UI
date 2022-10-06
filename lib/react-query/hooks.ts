@@ -1,5 +1,5 @@
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query'
-import { StatCardDto } from '../generated-api/StatCardApi'
+import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
+import { StatCardDto } from "../generated-api/StatCardApi";
 import {
   listStatCards,
   fetchCharacterStats,
@@ -7,66 +7,68 @@ import {
   deleteStatCard,
   getStatCard,
   updateStatCard,
-} from './fetchers'
+} from "./fetchers";
 
 export const useGetAllStatCardsQuery = () => {
-  const statCards = useQuery<Array<StatCardDto>>(['statCards'], listStatCards)
+  const statCards = useQuery<Array<StatCardDto>>(["statCards"], listStatCards);
 
-  return { ...statCards }
-}
+  return { ...statCards };
+};
 
 export const useGetCharacterStatsQuery = ({
   characterName,
   realm,
 }: {
-  characterName: string
-  realm: string
+  characterName: string;
+  realm: string;
 }) => {
   const characterStats = useQuery(
-    ['characterStats', { characterName, realm }],
+    ["characterStats", { characterName, realm }],
     fetchCharacterStats
-  )
+  );
 
-  return { ...characterStats }
-}
+  return { ...characterStats };
+};
 
 export const useSaveStatCardMutation = () => {
-  const saveStatCard = useMutation(createStatCard)
+  const saveStatCard = useMutation(createStatCard);
 
-  return { ...saveStatCard }
-}
+  return { ...saveStatCard };
+};
 
-type MutationHookProps = { queryClient: QueryClient }
-export const useDeleteStatCardMutation = ({ queryClient }: MutationHookProps) => {
+type MutationHookProps = { queryClient: QueryClient };
+export const useDeleteStatCardMutation = ({
+  queryClient,
+}: MutationHookProps) => {
   const deleteCard = useMutation(deleteStatCard, {
     onSuccess() {
-      queryClient.invalidateQueries(['statCards'], {
+      queryClient.invalidateQueries(["statCards"], {
         exact: true,
-        refetchType: 'active',
-      })
+        refetchType: "active",
+      });
     },
-  })
+  });
 
-  return { ...deleteCard }
-}
+  return { ...deleteCard };
+};
 
 export const useGetStatCardQuery = (id?: number) => {
-  const statCard = useQuery(['statCard', { id }], getStatCard)
+  const statCard = useQuery(["statCard", { id }], getStatCard);
 
-  return { ...statCard }
-}
+  return { ...statCard };
+};
 
 export const useUpdateCardMutation = ({ queryClient }: MutationHookProps) => {
   const updateCard = useMutation(updateStatCard, {
     onSuccess(data) {
       if (data) {
-        queryClient.invalidateQueries(['statCard'], {
+        queryClient.invalidateQueries(["statCard"], {
           exact: true,
-          refetchType: 'active',
-        })
+          refetchType: "active",
+        });
       }
     },
-  })
+  });
 
-  return { ...updateCard }
-}
+  return { ...updateCard };
+};

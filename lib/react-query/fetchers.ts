@@ -1,80 +1,106 @@
-import { QueryFunction } from '@tanstack/react-query'
-import { characterStatsClient, statCardClient } from '../generated-api/api-clients'
+import { QueryFunction } from "@tanstack/react-query";
+import {
+  characterStatsClient,
+  statCardClient,
+} from "../generated-api/api-clients";
 import {
   ApiException,
-  IStatCardDto,
+  ApiResponse,
   StatCardDto,
-  StatDto,
-} from '../generated-api/StatCardApi'
+} from "../generated-api/StatCardApi";
+import { StatDto } from "../generated-api/types";
 
 export const fetchCharacterStats: QueryFunction<
   StatDto,
   [
     string,
     {
-      characterName: string
-      realm: string
+      characterName: string;
+      realm: string;
     }
   ]
 > = async ({ queryKey }) => {
-  const [_key, { characterName, realm }] = queryKey
+  const [_key, { characterName, realm }] = queryKey;
 
-  if (!realm || !characterName || realm === '' || characterName === '') return
+  if (!realm || !characterName || realm === "" || characterName === "") return;
 
   try {
     const response = await characterStatsClient.get(
       characterName,
       realm,
       process.env.NEXT_PUBLIC_BLIZZ_CLIENT_ID
-    )
+    );
 
-    if (!response) throw new Error('Error fetching character stats.')
+    handleIfNotSuccess(response);
 
-    return response.toJSON()
+    return response.result;
   } catch (error: unknown) {
     if (error instanceof ApiException) {
-      throw new Error(error.message)
+      throw new Error(error.message);
     }
   }
-}
+};
 
 export const createStatCard = async (newCard: StatCardDto) => {
-  return await statCardClient.post(newCard)
-}
+  const response = await statCardClient.post(newCard);
+
+  handleIfNotSuccess(response);
+
+  return response.result;
+};
 
 export const getStatCard: QueryFunction<
-  IStatCardDto,
+  StatCardDto,
   [
     string,
     {
-      id?: number
+      id?: number;
     }
   ]
 > = async ({ queryKey }) => {
-  const [_key, { id }] = queryKey
+  const [_key, { id }] = queryKey;
 
-  if (!id) return []
+  if (!id) return [];
 
-  return await (await statCardClient.get(id)).toJSON()
-}
+  const response = await statCardClient.get2(id);
+
+  handleIfNotSuccess(response);
+
+  return response.result;
+};
 
 export const listStatCards = async () => {
-  return (await statCardClient.getAll()).map((dto) => dto.toJSON())
-}
+  const response = await statCardClient.get();
+
+  handleIfNotSuccess(response);
+
+  return response.result;
+};
 
 export const deleteStatCard = async (cardId?: number) => {
-  if (!cardId) return
-  return await statCardClient.delete(cardId)
-}
+  if (!cardId) return;
+
+  const response = await statCardClient.delete(cardId);
+
+  handleIfNotSuccess(response);
+};
 
 export const updateStatCard = async ({
   cardId,
   statCardDto,
 }: {
-  cardId?: number
-  statCardDto?: StatCardDto
+  cardId?: number;
+  statCardDto?: StatCardDto;
 }) => {
-  if (cardId === undefined || !statCardDto) return
+  if (cardId === undefined || !statCardDto) return;
 
-  return await statCardClient.put(cardId, statCardDto)
-}
+  const response = await statCardClient.put(cardId, statCardDto);
+
+  handleIfNotSuccess(response);
+
+  return response.result;
+};
+
+export const handleIfNotSuccess = (response: ApiResponse) => {
+  if (!response.isSuccess) throw new Error(response.errorMessages.join("\\n"));
+};
