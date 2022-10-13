@@ -1,15 +1,16 @@
 import React from "react";
-import "../styles/globals.css";
+import "styles/globals.css";
 import type { AppProps } from "next/app";
 import {
   DehydratedState,
   Hydrate,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import Seo from "../components/seo";
-import queryClient from "../lib/react-query/query-client";
+import Seo from "components/shared/seo";
+import queryClient from "lib/react-query/query-client";
 import NextNProgress from "nextjs-progressbar";
-import ErrorBoundary from "../components/error-boundary";
+import ErrorBoundary from "components/shared/error-boundary";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 function MyApp({
   Component,
@@ -30,6 +31,7 @@ function MyApp({
           <Component {...pageProps} />
         </ErrorBoundary>
       </Hydrate>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

@@ -1,16 +1,19 @@
 import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
-import { StatCardDto } from "../generated-api/StatCardApi";
-import {
-  listStatCards,
-  fetchCharacterStats,
-  createStatCard,
-  deleteStatCard,
-  getStatCard,
-  updateStatCard,
-} from "./fetchers";
+import { StatCardDto } from "lib/generated-api/StatCardApi";
+import { accountFetchers, statCardsFetchers } from "./fetchers";
 
-export const useGetAllStatCardsQuery = () => {
-  const statCards = useQuery<Array<StatCardDto>>(["statCards"], listStatCards);
+export enum QueryKeyEnum {
+  GetStatCard = "getStatCard",
+  ListStatCards = "listStatCards",
+  CharacterStats = "characterStats",
+  Me = "me",
+}
+
+export const useListStatCardsQuery = () => {
+  const statCards = useQuery<Array<StatCardDto>>(
+    [QueryKeyEnum.ListStatCards],
+    statCardsFetchers.queries.listStatCards
+  );
 
   return { ...statCards };
 };
@@ -23,15 +26,21 @@ export const useGetCharacterStatsQuery = ({
   realm: string;
 }) => {
   const characterStats = useQuery(
-    ["characterStats", { characterName, realm }],
-    fetchCharacterStats
+    [QueryKeyEnum.CharacterStats, { characterName, realm }],
+    statCardsFetchers.queries.fetchCharacterStats
   );
 
   return { ...characterStats };
 };
 
+export const useMeQuery = ({ queryClient }: MutationHookProps) => {
+  const me = useQuery([QueryKeyEnum.Me], accountFetchers.queries.me);
+
+  return { ...me };
+};
+
 export const useSaveStatCardMutation = () => {
-  const saveStatCard = useMutation(createStatCard);
+  const saveStatCard = useMutation(statCardsFetchers.mutations.createStatCard);
 
   return { ...saveStatCard };
 };
@@ -40,9 +49,9 @@ type MutationHookProps = { queryClient: QueryClient };
 export const useDeleteStatCardMutation = ({
   queryClient,
 }: MutationHookProps) => {
-  const deleteCard = useMutation(deleteStatCard, {
+  const deleteCard = useMutation(statCardsFetchers.mutations.deleteStatCard, {
     onSuccess() {
-      queryClient.invalidateQueries(["statCards"], {
+      queryClient.invalidateQueries([QueryKeyEnum.ListStatCards], {
         exact: true,
         refetchType: "active",
       });
@@ -53,16 +62,19 @@ export const useDeleteStatCardMutation = ({
 };
 
 export const useGetStatCardQuery = (id?: number) => {
-  const statCard = useQuery(["statCard", { id }], getStatCard);
+  const statCard = useQuery(
+    [QueryKeyEnum.GetStatCard, { id }],
+    statCardsFetchers.queries.getStatCard
+  );
 
   return { ...statCard };
 };
 
 export const useUpdateCardMutation = ({ queryClient }: MutationHookProps) => {
-  const updateCard = useMutation(updateStatCard, {
+  const updateCard = useMutation(statCardsFetchers.mutations.updateStatCard, {
     onSuccess(data) {
       if (data) {
-        queryClient.invalidateQueries(["statCard"], {
+        queryClient.invalidateQueries([QueryKeyEnum.GetStatCard], {
           exact: true,
           refetchType: "active",
         });
@@ -71,4 +83,16 @@ export const useUpdateCardMutation = ({ queryClient }: MutationHookProps) => {
   });
 
   return { ...updateCard };
+};
+
+export const useLoginMutation = ({ queryClient }: MutationHookProps) => {
+  const login = useMutation(accountFetchers.mutations.loginUser, {
+    onSuccess(data) {
+      if (data) {
+        queryClient.setQueryData([QueryKeyEnum.Me], data);
+      }
+    },
+  });
+
+  return { ...login };
 };

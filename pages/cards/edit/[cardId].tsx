@@ -7,22 +7,20 @@ import {
 } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
-import { Layout } from "../../../components/layout";
-import StatCardError from "../../../components/stat-card-error";
-import {
-  CharacterStats,
-  StatCardDto,
-} from "../../../lib/generated-api/StatCardApi";
-import { getStatCard } from "../../../lib/react-query/fetchers";
-import CharacterDisplay from "../../../components/character-display";
-import StatCardForm from "../../../components/stat-card-form";
-import { HIDDEN_STAT_NAMES } from "../../../lib/constants";
+import { Layout } from "components/shared/layout";
+import StatCardError from "components/cards/stat-card-error";
+import { CharacterStats, StatCardDto } from "lib/generated-api/StatCardApi";
+import CharacterDisplay from "components/cards/character-display";
+import { HIDDEN_STAT_NAMES } from "lib/constants";
 import {
   useUpdateCardMutation,
   useGetStatCardQuery,
   useGetCharacterStatsQuery,
-} from "../../../lib/react-query/hooks";
-import { StatDto } from "../../../lib/generated-api/types";
+  QueryKeyEnum,
+} from "lib/react-query/hooks";
+import { StatDto } from "lib/generated-api/types";
+import { statCardsFetchers } from "lib/react-query/fetchers";
+import StatCardForm from "components/cards/stat-card-form";
 
 type SSRProps = {
   cardId: number;
@@ -51,7 +49,10 @@ export const getServerSideProps: GetServerSideProps<
 
   const queryClient = new QueryClient();
   const numId = +cardId;
-  await queryClient.prefetchQuery(["statCard", { id: numId }], getStatCard);
+  await queryClient.prefetchQuery(
+    [QueryKeyEnum.GetStatCard, { id: numId }],
+    statCardsFetchers.queries.getStatCard
+  );
 
   return {
     props: {

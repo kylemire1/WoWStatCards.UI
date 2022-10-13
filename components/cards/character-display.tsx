@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
+import { camelCaseToTitle } from "lib/utils";
+import { StatDto } from "lib/generated-api/types";
 import StatCard from "./stat-card";
-import SvgBackground from "./svg-background";
-import { camelCaseToTitle } from "../lib/utils";
-import { StatDto } from "../lib/generated-api/types";
+import SvgBackground from "components/shared/svg-background";
 
 type CharacterDisplayProps = {
   charData: StatDto;

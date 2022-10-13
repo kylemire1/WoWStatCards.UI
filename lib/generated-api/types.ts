@@ -5,3 +5,9 @@ export interface StatDto extends CharacterStats {
   renderUrl: string;
   factionId: FactionEnum;
 }
+
+export interface UserDto {
+  displayName: string;
+  userName: string;
+  token: string;
+}

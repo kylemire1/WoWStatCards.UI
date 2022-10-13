@@ -3,43 +3,47 @@ import {
   DehydratedState,
   QueryClient,
   useQueryClient,
-} from '@tanstack/react-query'
-import { GetServerSideProps, NextPage } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
-import { Layout } from '../../components/layout'
-import { listStatCards } from '../../lib/react-query/fetchers'
+} from "@tanstack/react-query";
+import { GetServerSideProps, NextPage } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import { Layout } from "components/shared/layout";
+import { statCardsFetchers } from "lib/react-query/fetchers";
 import {
+  QueryKeyEnum,
   useDeleteStatCardMutation,
-  useGetAllStatCardsQuery,
-} from '../../lib/react-query/hooks'
+  useListStatCardsQuery,
+} from "lib/react-query/hooks";
 
 type SSRProps = {
-  dehydratedState: DehydratedState
-}
+  dehydratedState: DehydratedState;
+};
 
 export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery(['statCards'], listStatCards)
+  await queryClient.prefetchQuery(
+    [QueryKeyEnum.ListStatCards],
+    statCardsFetchers.queries.listStatCards
+  );
 
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
     },
-  }
-}
+  };
+};
 
 const Cards: NextPage = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { mutateAsync: deleteCard } = useDeleteStatCardMutation({
     queryClient,
-  })
-  const { error: cardsError, data: cardsData } = useGetAllStatCardsQuery()
+  });
+  const { error: cardsError, data: cardsData } = useListStatCardsQuery();
 
   if (cardsError instanceof Error) {
-    throw cardsError
+    throw cardsError;
   }
 
   return (
@@ -68,7 +72,9 @@ const Cards: NextPage = () => {
                         <h2 className='text-xl font-bold'>{c.cardName}</h2>
                         <ul>
                           <li>Character: {c.characterName}</li>
-                          <li>Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}</li>
+                          <li>
+                            Faction: {c.factionId === 1 ? "Alliance" : "Horde"}
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -81,12 +87,12 @@ const Cards: NextPage = () => {
                   Delete
                 </button>
               </div>
-            )
+            );
           })}
         </div>
       </Layout.Container>
     </Layout>
-  )
-}
+  );
+};
 
-export default Cards
+export default Cards;

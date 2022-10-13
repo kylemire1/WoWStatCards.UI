@@ -2,16 +2,17 @@ import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
 import { GetServerSideProps, NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
-import CharacterDisplay from "../../components/character-display";
-import { Layout } from "../../components/layout";
-import StatCardError from "../../components/stat-card-error";
-import StatCardForm from "../../components/stat-card-form";
-import { StatCardDto } from "../../lib/generated-api/StatCardApi";
-import { fetchCharacterStats } from "../../lib/react-query/fetchers";
+import CharacterDisplay from "components/cards/character-display";
+import { Layout } from "components/shared/layout";
+import StatCardError from "components/cards/stat-card-error";
+import { StatCardDto } from "lib/generated-api/StatCardApi";
+import { statCardsFetchers } from "lib/react-query/fetchers";
 import {
   useSaveStatCardMutation,
   useGetCharacterStatsQuery,
-} from "../../lib/react-query/hooks";
+  QueryKeyEnum,
+} from "lib/react-query/hooks";
+import StatCardForm from "components/cards/stat-card-form";
 
 type SSRProps = {
   characterName: string;
@@ -41,11 +42,11 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 
-  const queryClient = new QueryClient({});
+  const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery(
-    ["characterStats", { characterName, realm }],
-    fetchCharacterStats
+    [QueryKeyEnum.CharacterStats, { characterName, realm }],
+    statCardsFetchers.queries.fetchCharacterStats
   );
 
   return {
