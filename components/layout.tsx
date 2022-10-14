@@ -12,7 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
           </li>
           <li>
-            <Link href='/api/auth/login'>
+            <Link href='/api/auth/signin'>
               <a>Login</a>
             </Link>
           </li>

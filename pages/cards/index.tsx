@@ -5,8 +5,10 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { GetServerSideProps, NextPage } from 'next'
+import { unstable_getServerSession } from 'next-auth/next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { authOptions } from 'pages/api/auth/[...nextauth]'
 import React from 'react'
 import { Layout } from '../../components/layout'
 import { listStatCards } from '../../lib/react-query/fetchers'
@@ -19,7 +21,9 @@ type SSRProps = {
   dehydratedState: DehydratedState
 }
 
-export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
+export const getServerSideProps: GetServerSideProps<SSRProps> = async (context) => {
+  const session = await unstable_getServerSession(context.req, context.res, authOptions)
+  console.log({ session })
   const queryClient = new QueryClient()
 
   await queryClient.prefetchQuery(['statCards'], listStatCards)

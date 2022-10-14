@@ -5,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        'light-image': "url('/images/light-bg.jpg')"
+        'light-image': "url('/images/light-bg.jpg')",
       },
       width: {
         'render-wrapper': '265%',
