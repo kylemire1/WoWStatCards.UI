@@ -1,7 +1,7 @@
 import React from 'react'
 import { camelCaseToTitle } from '../lib/utils'
 
-type StatCardFormProps<T> = {
+type StatCardFormProps<T extends object> = {
   cardNameValue: string
   statData: T
   selectedStats: Array<string>
@@ -13,7 +13,7 @@ type StatCardFormProps<T> = {
   defaultChecked?: (statName: string) => boolean
   error?: unknown
 }
-function StatCardForm<T>({
+function StatCardForm<T extends object>({
   cardNameValue,
   handleFormSubmit,
   disableAllInputs,

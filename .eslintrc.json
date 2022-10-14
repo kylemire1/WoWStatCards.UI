@@ -14,7 +14,8 @@
         "ignoreRestSiblings": true,
         "destructuredArrayIgnorePattern": "^_"
       }
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": "off"
   },
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"]

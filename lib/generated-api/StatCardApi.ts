@@ -8,31 +8,192 @@
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
-export interface ICharacterStatsClient {
-  get(
-    characterName: string | null | undefined,
-    realm: string | null | undefined,
-    clientId: string | null | undefined
-  ): Promise<ApiResponse>;
+export interface IAccountClient {
+  login(loginDto: LoginDto): Promise<ApiResponse>
+
+  register(registerDto: RegisterDto): Promise<ApiResponse>
+
+  me(): Promise<ApiResponse>
 }
 
-export class CharacterStatsClient implements ICharacterStatsClient {
+export class AccountClient implements IAccountClient {
   private http: {
-    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
-  };
-  private baseUrl: string;
-  protected jsonParseReviver: ((key: string, value: any) => any) | undefined =
-    undefined;
+    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>
+  }
+  private baseUrl: string
+  protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined
 
   constructor(
     baseUrl?: string,
     http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }
   ) {
-    this.http = http ? http : (window as any);
+    this.http = http ? http : (window as any)
     this.baseUrl =
       baseUrl !== undefined && baseUrl !== null
         ? baseUrl
-        : "https://wowstatcardsapi.azurewebsites.net";
+        : 'https://wowstatcardsapi.azurewebsites.net'
+  }
+
+  login(loginDto: LoginDto): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/Account/login'
+    url_ = url_.replace(/[?&]$/, '')
+
+    const content_ = JSON.stringify(loginDto)
+
+    let options_: RequestInit = {
+      body: content_,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processLogin(_response)
+    })
+  }
+
+  protected processLogin(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
+    }
+    if (status === 200) {
+      return response.text().then((_responseText) => {
+        let result200: any = null
+        result200 =
+          _responseText === ''
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
+    } else if (status !== 200 && status !== 204) {
+      return response.text().then((_responseText) => {
+        return throwException(_responseText, status, _responseText, _headers)
+      })
+    }
+    return Promise.resolve<ApiResponse>(null as any)
+  }
+
+  register(registerDto: RegisterDto): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/Account/register'
+    url_ = url_.replace(/[?&]$/, '')
+
+    const content_ = JSON.stringify(registerDto)
+
+    let options_: RequestInit = {
+      body: content_,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processRegister(_response)
+    })
+  }
+
+  protected processRegister(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
+    }
+    if (status === 200) {
+      return response.text().then((_responseText) => {
+        let result200: any = null
+        result200 =
+          _responseText === ''
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
+    } else if (status !== 200 && status !== 204) {
+      return response.text().then((_responseText) => {
+        return throwException(
+          'An unexpected server error occurred.',
+          status,
+          _responseText,
+          _headers
+        )
+      })
+    }
+    return Promise.resolve<ApiResponse>(null as any)
+  }
+
+  me(): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/Account/me'
+    url_ = url_.replace(/[?&]$/, '')
+
+    let options_: RequestInit = {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processMe(_response)
+    })
+  }
+
+  protected processMe(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
+    }
+    if (status === 200) {
+      return response.text().then((_responseText) => {
+        let result200: any = null
+        result200 =
+          _responseText === ''
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
+    } else if (status !== 200 && status !== 204) {
+      return response.text().then((_responseText) => {
+        return throwException(
+          'An unexpected server error occurred.',
+          status,
+          _responseText,
+          _headers
+        )
+      })
+    }
+    return Promise.resolve<ApiResponse>(null as any)
+  }
+}
+
+export interface ICharacterStatsClient {
+  get(
+    characterName: string | null | undefined,
+    realm: string | null | undefined,
+    clientId: string | null | undefined
+  ): Promise<ApiResponse>
+}
+
+export class CharacterStatsClient implements ICharacterStatsClient {
+  private http: {
+    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>
+  }
+  private baseUrl: string
+  protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined
+
+  constructor(
+    baseUrl?: string,
+    http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }
+  ) {
+    this.http = http ? http : (window as any)
+    this.baseUrl =
+      baseUrl !== undefined && baseUrl !== null
+        ? baseUrl
+        : 'https://wowstatcardsapi.azurewebsites.net'
   }
 
   get(
@@ -40,330 +201,329 @@ export class CharacterStatsClient implements ICharacterStatsClient {
     realm: string | null | undefined,
     clientId: string | null | undefined
   ): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/CharacterStats?";
+    let url_ = this.baseUrl + '/api/CharacterStats?'
     if (characterName !== undefined && characterName !== null)
-      url_ += "characterName=" + encodeURIComponent("" + characterName) + "&";
+      url_ += 'characterName=' + encodeURIComponent('' + characterName) + '&'
     if (realm !== undefined && realm !== null)
-      url_ += "realm=" + encodeURIComponent("" + realm) + "&";
+      url_ += 'realm=' + encodeURIComponent('' + realm) + '&'
     if (clientId !== undefined && clientId !== null)
-      url_ += "clientId=" + encodeURIComponent("" + clientId) + "&";
-    url_ = url_.replace(/[?&]$/, "");
+      url_ += 'clientId=' + encodeURIComponent('' + clientId) + '&'
+    url_ = url_.replace(/[?&]$/, '')
 
     let options_: RequestInit = {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
+        Accept: 'application/json',
       },
-    };
+    }
 
     return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processGet(_response);
-    });
+      return this.processGet(_response)
+    })
   }
 
   protected processGet(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
+    const status = response.status
+    let _headers: any = {}
     if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
     }
     if (status === 200) {
       return response.text().then((_responseText) => {
-        let result200: any = null;
+        let result200: any = null
         result200 =
-          _responseText === ""
+          _responseText === ''
             ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
     } else if (status !== 200 && status !== 204) {
       return response.text().then((_responseText) => {
         return throwException(
-          "An unexpected server error occurred.",
+          'An unexpected server error occurred.',
           status,
           _responseText,
           _headers
-        );
-      });
+        )
+      })
     }
-    return Promise.resolve<ApiResponse>(null as any);
+    return Promise.resolve<ApiResponse>(null as any)
   }
 }
 
 export interface IStatCardsClient {
-  get(): Promise<ApiResponse>;
+  getAll(): Promise<ApiResponse>
 
-  post(statCardDto: StatCardDto): Promise<ApiResponse>;
+  create(statCardDto: StatCardDto): Promise<ApiResponse>
 
-  get2(id: number): Promise<ApiResponse>;
+  get(id: number): Promise<ApiResponse>
 
-  put(id: number, statCardDto: StatCardDto): Promise<ApiResponse>;
+  update(id: number, statCardDto: StatCardDto): Promise<ApiResponse>
 
-  delete(id: number): Promise<ApiResponse>;
+  delete(id: number): Promise<ApiResponse>
 }
 
 export class StatCardsClient implements IStatCardsClient {
   private http: {
-    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
-  };
-  private baseUrl: string;
-  protected jsonParseReviver: ((key: string, value: any) => any) | undefined =
-    undefined;
+    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>
+  }
+  private baseUrl: string
+  protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined
 
   constructor(
     baseUrl?: string,
     http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }
   ) {
-    this.http = http ? http : (window as any);
+    this.http = http ? http : (window as any)
     this.baseUrl =
       baseUrl !== undefined && baseUrl !== null
         ? baseUrl
-        : "https://wowstatcardsapi.azurewebsites.net";
+        : 'https://wowstatcardsapi.azurewebsites.net'
   }
 
-  get(): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/StatCards";
-    url_ = url_.replace(/[?&]$/, "");
+  getAll(): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/StatCards'
+    url_ = url_.replace(/[?&]$/, '')
 
     let options_: RequestInit = {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/json",
+        Accept: 'application/json',
       },
-    };
+    }
 
     return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processGet(_response);
-    });
+      return this.processGetAll(_response)
+    })
+  }
+
+  protected processGetAll(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
+    }
+    if (status === 200) {
+      return response.text().then((_responseText) => {
+        let result200: any = null
+        result200 =
+          _responseText === ''
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
+    } else if (status !== 200 && status !== 204) {
+      return response.text().then((_responseText) => {
+        return throwException(
+          'An unexpected server error occurred.',
+          status,
+          _responseText,
+          _headers
+        )
+      })
+    }
+    return Promise.resolve<ApiResponse>(null as any)
+  }
+
+  create(statCardDto: StatCardDto): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/StatCards'
+    url_ = url_.replace(/[?&]$/, '')
+
+    const content_ = JSON.stringify(statCardDto)
+
+    let options_: RequestInit = {
+      body: content_,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processCreate(_response)
+    })
+  }
+
+  protected processCreate(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
+    if (response.headers && response.headers.forEach) {
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
+    }
+    if (status === 200) {
+      return response.text().then((_responseText) => {
+        let result200: any = null
+        result200 =
+          _responseText === ''
+            ? null
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
+    } else if (status !== 200 && status !== 204) {
+      return response.text().then((_responseText) => {
+        return throwException(
+          'An unexpected server error occurred.',
+          status,
+          _responseText,
+          _headers
+        )
+      })
+    }
+    return Promise.resolve<ApiResponse>(null as any)
+  }
+
+  get(id: number): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/StatCards/{id}'
+    if (id === undefined || id === null)
+      throw new Error("The parameter 'id' must be defined.")
+    url_ = url_.replace('{id}', encodeURIComponent('' + id))
+    url_ = url_.replace(/[?&]$/, '')
+
+    let options_: RequestInit = {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+
+    return this.http.fetch(url_, options_).then((_response: Response) => {
+      return this.processGet(_response)
+    })
   }
 
   protected processGet(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
+    const status = response.status
+    let _headers: any = {}
     if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
     }
     if (status === 200) {
       return response.text().then((_responseText) => {
-        let result200: any = null;
+        let result200: any = null
         result200 =
-          _responseText === ""
+          _responseText === ''
             ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
     } else if (status !== 200 && status !== 204) {
       return response.text().then((_responseText) => {
         return throwException(
-          "An unexpected server error occurred.",
+          'An unexpected server error occurred.',
           status,
           _responseText,
           _headers
-        );
-      });
+        )
+      })
     }
-    return Promise.resolve<ApiResponse>(null as any);
+    return Promise.resolve<ApiResponse>(null as any)
   }
 
-  post(statCardDto: StatCardDto): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/StatCards";
-    url_ = url_.replace(/[?&]$/, "");
+  update(id: number, statCardDto: StatCardDto): Promise<ApiResponse> {
+    let url_ = this.baseUrl + '/api/StatCards/{id}'
+    if (id === undefined || id === null)
+      throw new Error("The parameter 'id' must be defined.")
+    url_ = url_.replace('{id}', encodeURIComponent('' + id))
+    url_ = url_.replace(/[?&]$/, '')
 
-    const content_ = JSON.stringify(statCardDto);
+    const content_ = JSON.stringify(statCardDto)
 
     let options_: RequestInit = {
       body: content_,
-      method: "POST",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-    };
+    }
 
     return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processPost(_response);
-    });
+      return this.processUpdate(_response)
+    })
   }
 
-  protected processPost(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
+  protected processUpdate(response: Response): Promise<ApiResponse> {
+    const status = response.status
+    let _headers: any = {}
     if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
     }
     if (status === 200) {
       return response.text().then((_responseText) => {
-        let result200: any = null;
+        let result200: any = null
         result200 =
-          _responseText === ""
+          _responseText === ''
             ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
     } else if (status !== 200 && status !== 204) {
       return response.text().then((_responseText) => {
         return throwException(
-          "An unexpected server error occurred.",
+          'An unexpected server error occurred.',
           status,
           _responseText,
           _headers
-        );
-      });
+        )
+      })
     }
-    return Promise.resolve<ApiResponse>(null as any);
-  }
-
-  get2(id: number): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/StatCards/{id}";
-    if (id === undefined || id === null)
-      throw new Error("The parameter 'id' must be defined.");
-    url_ = url_.replace("{id}", encodeURIComponent("" + id));
-    url_ = url_.replace(/[?&]$/, "");
-
-    let options_: RequestInit = {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    };
-
-    return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processGet2(_response);
-    });
-  }
-
-  protected processGet2(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
-    if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
-    }
-    if (status === 200) {
-      return response.text().then((_responseText) => {
-        let result200: any = null;
-        result200 =
-          _responseText === ""
-            ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
-    } else if (status !== 200 && status !== 204) {
-      return response.text().then((_responseText) => {
-        return throwException(
-          "An unexpected server error occurred.",
-          status,
-          _responseText,
-          _headers
-        );
-      });
-    }
-    return Promise.resolve<ApiResponse>(null as any);
-  }
-
-  put(id: number, statCardDto: StatCardDto): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/StatCards/{id}";
-    if (id === undefined || id === null)
-      throw new Error("The parameter 'id' must be defined.");
-    url_ = url_.replace("{id}", encodeURIComponent("" + id));
-    url_ = url_.replace(/[?&]$/, "");
-
-    const content_ = JSON.stringify(statCardDto);
-
-    let options_: RequestInit = {
-      body: content_,
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    };
-
-    return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processPut(_response);
-    });
-  }
-
-  protected processPut(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
-    if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
-    }
-    if (status === 200) {
-      return response.text().then((_responseText) => {
-        let result200: any = null;
-        result200 =
-          _responseText === ""
-            ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
-    } else if (status !== 200 && status !== 204) {
-      return response.text().then((_responseText) => {
-        return throwException(
-          "An unexpected server error occurred.",
-          status,
-          _responseText,
-          _headers
-        );
-      });
-    }
-    return Promise.resolve<ApiResponse>(null as any);
+    return Promise.resolve<ApiResponse>(null as any)
   }
 
   delete(id: number): Promise<ApiResponse> {
-    let url_ = this.baseUrl + "/api/StatCards/{id}";
+    let url_ = this.baseUrl + '/api/StatCards/{id}'
     if (id === undefined || id === null)
-      throw new Error("The parameter 'id' must be defined.");
-    url_ = url_.replace("{id}", encodeURIComponent("" + id));
-    url_ = url_.replace(/[?&]$/, "");
+      throw new Error("The parameter 'id' must be defined.")
+    url_ = url_.replace('{id}', encodeURIComponent('' + id))
+    url_ = url_.replace(/[?&]$/, '')
 
     let options_: RequestInit = {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        Accept: "application/json",
+        Accept: 'application/json',
       },
-    };
+    }
 
     return this.http.fetch(url_, options_).then((_response: Response) => {
-      return this.processDelete(_response);
-    });
+      return this.processDelete(_response)
+    })
   }
 
   protected processDelete(response: Response): Promise<ApiResponse> {
-    const status = response.status;
-    let _headers: any = {};
+    const status = response.status
+    let _headers: any = {}
     if (response.headers && response.headers.forEach) {
-      response.headers.forEach((v: any, k: any) => (_headers[k] = v));
+      response.headers.forEach((v: any, k: any) => (_headers[k] = v))
     }
     if (status === 200) {
       return response.text().then((_responseText) => {
-        let result200: any = null;
+        let result200: any = null
         result200 =
-          _responseText === ""
+          _responseText === ''
             ? null
-            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse);
-        return result200;
-      });
+            : (JSON.parse(_responseText, this.jsonParseReviver) as ApiResponse)
+        return result200
+      })
     } else if (status !== 200 && status !== 204) {
       return response.text().then((_responseText) => {
         return throwException(
-          "An unexpected server error occurred.",
+          'An unexpected server error occurred.',
           status,
           _responseText,
           _headers
-        );
-      });
+        )
+      })
     }
-    return Promise.resolve<ApiResponse>(null as any);
+    return Promise.resolve<ApiResponse>(null as any)
   }
 }
 
 export interface ApiResponse {
-  statusCode: HttpStatusCode;
-  isSuccess: boolean;
-  errorMessages: string[];
-  result: any;
+  statusCode: HttpStatusCode
+  isSuccess: boolean
+  errorMessages: string[]
+  result: any
 }
 
 export enum HttpStatusCode {
@@ -435,44 +595,56 @@ export enum HttpStatusCode {
   NetworkAuthenticationRequired = 511,
 }
 
+export interface LoginDto {
+  email: string
+  password: string
+}
+
+export interface RegisterDto {
+  displayName: string
+  userName: string
+  email: string
+  password: string
+}
+
 export interface CharacterStats {
-  characterName: string;
-  avgItemLevel: number;
-  realm: string;
-  avatarUrl?: string | undefined;
-  renderUrl?: string | undefined;
-  health?: number | undefined;
-  strength?: number | undefined;
-  agility?: number | undefined;
-  intellect?: number | undefined;
-  stamina?: number | undefined;
-  meleeCrit?: number | undefined;
-  meleeHaste?: number | undefined;
-  mastery?: number | undefined;
-  bonusArmor?: number | undefined;
-  lifesteal?: number | undefined;
-  versatility?: number | undefined;
-  attackPower?: number | undefined;
-  mainHandDamageMin?: number | undefined;
-  mainHandDamageMax?: number | undefined;
-  mainHandSpeed?: number | undefined;
-  mainHandDps?: number | undefined;
-  offHandDamageMin?: number | undefined;
-  offHandDamageMax?: number | undefined;
-  offHandSpeed?: number | undefined;
-  offHandDps?: number | undefined;
-  spellPower?: number | undefined;
-  spellCrit?: number | undefined;
-  armor?: number | undefined;
+  characterName: string
+  avgItemLevel: number
+  realm: string
+  avatarUrl?: string | undefined
+  renderUrl?: string | undefined
+  health?: number | undefined
+  strength?: number | undefined
+  agility?: number | undefined
+  intellect?: number | undefined
+  stamina?: number | undefined
+  meleeCrit?: number | undefined
+  meleeHaste?: number | undefined
+  mastery?: number | undefined
+  bonusArmor?: number | undefined
+  lifesteal?: number | undefined
+  versatility?: number | undefined
+  attackPower?: number | undefined
+  mainHandDamageMin?: number | undefined
+  mainHandDamageMax?: number | undefined
+  mainHandSpeed?: number | undefined
+  mainHandDps?: number | undefined
+  offHandDamageMin?: number | undefined
+  offHandDamageMax?: number | undefined
+  offHandSpeed?: number | undefined
+  offHandDps?: number | undefined
+  spellPower?: number | undefined
+  spellCrit?: number | undefined
+  armor?: number | undefined
 }
 
 export interface StatCardDto extends CharacterStats {
-  id?: number | undefined;
-  cardName: string;
-  characterName: string;
-  avatarUrl: string;
-  renderUrl: string;
-  factionId: FactionEnum;
+  id?: number | undefined
+  cardName: string
+  characterName: string
+  avatarUrl: string
+  renderUrl: string
+  factionId: FactionEnum
 }
 
 export enum FactionEnum {
@@ -481,11 +653,11 @@ export enum FactionEnum {
 }
 
 export class ApiException extends Error {
-  override message: string;
-  status: number;
-  response: string;
-  headers: { [key: string]: any };
-  result: any;
+  override message: string
+  status: number
+  response: string
+  headers: { [key: string]: any }
+  result: any
 
   constructor(
     message: string,
@@ -494,19 +666,19 @@ export class ApiException extends Error {
     headers: { [key: string]: any },
     result: any
   ) {
-    super();
+    super()
 
-    this.message = message;
-    this.status = status;
-    this.response = response;
-    this.headers = headers;
-    this.result = result;
+    this.message = message
+    this.status = status
+    this.response = response
+    this.headers = headers
+    this.result = result
   }
 
-  protected isApiException = true;
+  protected isApiException = true
 
   static isApiException(obj: any): obj is ApiException {
-    return obj.isApiException === true;
+    return obj.isApiException === true
   }
 }
 
@@ -517,6 +689,6 @@ function throwException(
   headers: { [key: string]: any },
   result?: any
 ): any {
-  if (result !== null && result !== undefined) throw result;
-  else throw new ApiException(message, status, response, headers, null);
+  if (result !== null && result !== undefined) throw result
+  else throw new ApiException(response, status, response, headers, null)
 }

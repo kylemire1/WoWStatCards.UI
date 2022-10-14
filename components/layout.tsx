@@ -12,6 +12,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
           </li>
           <li>
+            <Link href='/api/auth/login'>
+              <a>Login</a>
+            </Link>
+          </li>
+          <li>
             <Link href='/cards'>
               <a>Saved Cards</a>
             </Link>
