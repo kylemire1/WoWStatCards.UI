@@ -1,9 +1,10 @@
 import { QueryFunction } from '@tanstack/react-query'
-import { characterStatsClient, statCardClient } from '../generated-api/api-clients'
-import { ApiException, ApiResponse, StatCardDto } from '../generated-api/StatCardApi'
-import { StatDto } from '../generated-api/types'
+import { characterStatsClient, statCardClient } from 'lib/generated-api/api-clients'
+import { ApiException, StatCardDto } from 'lib/generated-api/StatCardApi'
+import { StatDto } from 'lib/generated-api/types'
+import { handleIfNotSuccess } from 'lib/utils'
 
-export const fetchCharacterStats: QueryFunction<
+const getCharacterStats: QueryFunction<
   StatDto,
   [
     string,
@@ -34,7 +35,7 @@ export const fetchCharacterStats: QueryFunction<
   }
 }
 
-export const createStatCard = async (newCard: StatCardDto) => {
+const createStatCard = async (newCard: StatCardDto) => {
   const response = await statCardClient.create(newCard)
 
   handleIfNotSuccess(response)
@@ -42,7 +43,7 @@ export const createStatCard = async (newCard: StatCardDto) => {
   return response.result
 }
 
-export const getStatCard: QueryFunction<
+const getStatCard: QueryFunction<
   StatCardDto,
   [
     string,
@@ -62,7 +63,7 @@ export const getStatCard: QueryFunction<
   return response.result
 }
 
-export const listStatCards = async () => {
+const getAllStatCards = async () => {
   const response = await statCardClient.getAll()
 
   handleIfNotSuccess(response)
@@ -70,7 +71,7 @@ export const listStatCards = async () => {
   return response.result
 }
 
-export const deleteStatCard = async (cardId?: number) => {
+const deleteStatCard = async (cardId?: number) => {
   if (!cardId) return
 
   const response = await statCardClient.delete(cardId)
@@ -78,7 +79,7 @@ export const deleteStatCard = async (cardId?: number) => {
   handleIfNotSuccess(response)
 }
 
-export const updateStatCard = async ({
+const updateStatCard = async ({
   cardId,
   statCardDto,
 }: {
@@ -94,6 +95,17 @@ export const updateStatCard = async ({
   return response.result
 }
 
-export const handleIfNotSuccess = (response: ApiResponse) => {
-  if (!response.isSuccess) throw new Error(response.errorMessages.join('\\n'))
+const fetchers = {
+  queries: {
+    getStatCard,
+    getAllStatCards,
+    getCharacterStats,
+  },
+  mutations: {
+    createStatCard,
+    updateStatCard,
+    deleteStatCard,
+  },
 }
+
+export default fetchers

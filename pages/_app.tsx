@@ -6,33 +6,33 @@ import Seo from '../components/seo'
 import queryClient from '../lib/react-query/query-client'
 import NextNProgress from 'nextjs-progressbar'
 import ErrorBoundary from '../components/error-boundary'
-import { SessionProvider, useSession } from 'next-auth/react'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 function MyApp({
   Component,
   pageProps,
 }: AppProps<{
   dehydratedState: DehydratedState
-  session: ReturnType<typeof useSession>
 }>) {
   return (
-    <SessionProvider>
-      <QueryClientProvider client={queryClient}>
-        <Hydrate state={pageProps.dehydratedState}>
-          <Seo />
-          <ErrorBoundary>
-            <NextNProgress
-              startPosition={0.3}
-              stopDelayMs={200}
-              height={3}
-              showOnShallow={true}
-            />
+    <QueryClientProvider client={queryClient}>
+      <Hydrate state={pageProps.dehydratedState}>
+        <Seo />
+        <ErrorBoundary>
+          <NextNProgress
+            startPosition={0.3}
+            stopDelayMs={200}
+            height={3}
+            showOnShallow={true}
+          />
 
-            <Component {...pageProps} />
-          </ErrorBoundary>
-        </Hydrate>
-      </QueryClientProvider>
-    </SessionProvider>
+          <Component {...pageProps} />
+        </ErrorBoundary>
+      </Hydrate>
+      {process.env.NODE_ENV === 'development' ? (
+        <ReactQueryDevtools initialIsOpen={false} />
+      ) : null}
+    </QueryClientProvider>
   )
 }
 

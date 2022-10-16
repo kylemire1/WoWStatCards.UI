@@ -11,3 +11,7 @@ export const HIDDEN_STAT_NAMES = [
   'factionId',
   'realm',
 ]
+
+export const KEY_NAME = 'qw'
+
+export const WEEK_IN_SECONDS = 60 * 60 * 24 * 7
