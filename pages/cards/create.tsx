@@ -7,10 +7,11 @@ import { Layout } from '../../components/layout'
 import StatCardError from '../../components/stat-card-error'
 import StatCardForm from '../../components/stat-card-form'
 import { StatCardDto } from '../../lib/generated-api/StatCardApi'
-import { fetchCharacterStats } from '../../lib/react-query/fetchers'
+import { statCardsFetchers } from '../../lib/react-query/fetchers'
 import {
   useSaveStatCardMutation,
   useGetCharacterStatsQuery,
+  QueryKeyEnum,
 } from '../../lib/react-query/hooks'
 
 type SSRProps = {
@@ -44,8 +45,8 @@ export const getServerSideProps: GetServerSideProps<
   const queryClient = new QueryClient({})
 
   await queryClient.prefetchQuery(
-    ['characterStats', { characterName, realm }],
-    fetchCharacterStats
+    [QueryKeyEnum.getCharacterStats, { characterName, realm }],
+    statCardsFetchers.queries.getCharacterStats
   )
 
   return {

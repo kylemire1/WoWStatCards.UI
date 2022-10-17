@@ -1,28 +1,10 @@
 import React from 'react'
-import Link from 'next/link'
+import Nav from './nav'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <nav>
-        <ul className='fixed top-0 left-0 z-50 right-0 flex gap-2 justify-end backdrop-filter backdrop-blur-md px-4 py-6 font-bold'>
-          <li>
-            <Link href='/'>
-              <a>Home</a>
-            </Link>
-          </li>
-          <li>
-            <Link href='/login'>
-              <a>Login</a>
-            </Link>
-          </li>
-          <li>
-            <Link href='/cards'>
-              <a>Saved Cards</a>
-            </Link>
-          </li>
-        </ul>
-      </nav>
+      <Nav />
       <main className='py-24 min-h-[95vh]'>{children}</main>
 
       <footer className='text-center'>
