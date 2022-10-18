@@ -1,3 +1,4 @@
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
 import {
   dehydrate,
   DehydratedState,
@@ -9,7 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import { Layout } from '../../components/layout'
-import { listStatCards } from '../../lib/react-query/fetchers'
+import { statCardsFetchers } from '../../lib/react-query/fetchers'
 import {
   useDeleteStatCardMutation,
   useGetAllStatCardsQuery,
@@ -22,7 +23,10 @@ type SSRProps = {
 export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
   const queryClient = new QueryClient()
 
-  await queryClient.prefetchQuery(['statCards'], listStatCards)
+  await queryClient.prefetchQuery(
+    ['statCards'],
+    statCardsFetchers.queries.getAllStatCards
+  )
 
   return {
     props: {
@@ -68,7 +72,9 @@ const Cards: NextPage = () => {
                         <h2 className='text-xl font-bold'>{c.cardName}</h2>
                         <ul>
                           <li>Character: {c.characterName}</li>
-                          <li>Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}</li>
+                          <li>
+                            Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -89,4 +95,4 @@ const Cards: NextPage = () => {
   )
 }
 
-export default Cards
+export default withPageAuthRequired(Cards)

@@ -43,7 +43,9 @@ export const useSaveStatCardMutation = () => {
 }
 
 type MutationHookProps = { queryClient: QueryClient }
-export const useDeleteStatCardMutation = ({ queryClient }: MutationHookProps) => {
+export const useDeleteStatCardMutation = ({
+  queryClient,
+}: MutationHookProps) => {
   const deleteCard = useMutation(statCardsFetchers.mutations.deleteStatCard, {
     onSuccess() {
       queryClient.invalidateQueries(['statCards'], {
