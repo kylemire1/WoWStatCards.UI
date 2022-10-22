@@ -1,18 +1,18 @@
 import { dehydrate, DehydratedState, QueryClient } from '@tanstack/react-query'
+import { StatCards } from 'lib/react-query/entities'
 import { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React, { useState } from 'react'
-import CharacterDisplay from '../../components/character-display'
-import { Layout } from '../../components/layout'
-import StatCardError from '../../components/stat-card-error'
-import StatCardForm from '../../components/stat-card-form'
-import { StatCardDto } from '../../lib/generated-api/StatCardApi'
-import { statCardsFetchers } from '../../lib/react-query/fetchers'
+import CharacterDisplay from 'components/character-display'
+import { Layout } from 'components/layout'
+import StatCardError from 'components/stat-card-error'
+import StatCardForm from 'components/stat-card-form'
+import { StatCardDto } from 'lib/generated-api/StatCardApi'
 import {
   useSaveStatCardMutation,
   useGetCharacterStatsQuery,
   QueryKeyEnum,
-} from '../../lib/react-query/hooks'
+} from 'lib/react-query/hooks'
 
 type SSRProps = {
   characterName: string
@@ -42,11 +42,10 @@ export const getServerSideProps: GetServerSideProps<
     }
   }
 
-  const queryClient = new QueryClient({})
-
+  const queryClient = new QueryClient()
   await queryClient.prefetchQuery(
     [QueryKeyEnum.getCharacterStats, { characterName, realm }],
-    statCardsFetchers.queries.getCharacterStats
+    StatCards.queries.getCharacterStats
   )
 
   return {
@@ -123,6 +122,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     )
 
     const result = await saveCard(statCardData)
+    console.log('result', result)
 
     if (typeof result.id === 'number') {
       router.push('/cards')

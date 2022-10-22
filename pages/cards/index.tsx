@@ -9,12 +9,12 @@ import { GetServerSideProps, NextPage } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
-import { Layout } from '../../components/layout'
-import { statCardsFetchers } from '../../lib/react-query/fetchers'
+import { Layout } from 'components/layout'
+import { StatCards } from 'lib/react-query/entities'
 import {
   useDeleteStatCardMutation,
   useGetAllStatCardsQuery,
-} from '../../lib/react-query/hooks'
+} from 'lib/react-query/hooks'
 
 type SSRProps = {
   dehydratedState: DehydratedState
@@ -23,10 +23,7 @@ type SSRProps = {
 export const getServerSideProps: GetServerSideProps<SSRProps> = async () => {
   const queryClient = new QueryClient()
 
-  await queryClient.prefetchQuery(
-    ['statCards'],
-    statCardsFetchers.queries.getAllStatCards
-  )
+  await queryClient.prefetchQuery(['statCards'], StatCards.queries.getAllStatCards)
 
   return {
     props: {
@@ -72,9 +69,7 @@ const Cards: NextPage = () => {
                         <h2 className='text-xl font-bold'>{c.cardName}</h2>
                         <ul>
                           <li>Character: {c.characterName}</li>
-                          <li>
-                            Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}
-                          </li>
+                          <li>Faction: {c.factionId === 1 ? 'Alliance' : 'Horde'}</li>
                         </ul>
                       </div>
                     </div>

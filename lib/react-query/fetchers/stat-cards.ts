@@ -1,111 +1,28 @@
-import { QueryFunction } from '@tanstack/react-query'
-import { characterStatsClient, statCardClient } from 'lib/generated-api/api-clients'
-import { ApiException, StatCardDto } from 'lib/generated-api/StatCardApi'
-import { StatDto } from 'lib/generated-api/types'
-import { handleIfNotSuccess } from 'lib/utils'
+import { AxiosResponse } from 'axios'
+import { ApiResponse, StatCardDto } from 'lib/generated-api/StatCardApi'
+import { http } from '../../http'
 
-const getCharacterStats: QueryFunction<
-  StatDto,
-  [
-    string,
-    {
-      characterName: string
-      realm: string
-    }
-  ]
-> = async ({ queryKey }) => {
-  const [_key, { characterName, realm }] = queryKey
-
-  if (!realm || !characterName || realm === '' || characterName === '') return
-
-  try {
-    const response = await characterStatsClient.get(
-      characterName,
-      realm,
-      process.env.NEXT_PUBLIC_BLIZZ_CLIENT_ID
-    )
-
-    handleIfNotSuccess(response)
-
-    return response.result
-  } catch (error: unknown) {
-    if (error instanceof ApiException) {
-      throw new Error(error.message)
-    }
-  }
-}
-
-const createStatCard = async (newCard: StatCardDto) => {
-  const response = await statCardClient.create(newCard)
-
-  handleIfNotSuccess(response)
-
-  return response.result
-}
-
-const getStatCard: QueryFunction<
-  StatCardDto,
-  [
-    string,
-    {
-      id?: number
-    }
-  ]
-> = async ({ queryKey }) => {
-  const [_key, { id }] = queryKey
-
-  if (!id) return []
-
-  const response = await statCardClient.get(id)
-
-  handleIfNotSuccess(response)
-
-  return response.result
-}
-
-const getAllStatCards = async () => {
-  const response = await statCardClient.getAll()
-
-  handleIfNotSuccess(response)
-
-  return response.result
-}
-
-const deleteStatCard = async (cardId?: number) => {
-  if (!cardId) return
-
-  const response = await statCardClient.delete(cardId)
-
-  handleIfNotSuccess(response)
-}
-
-const updateStatCard = async ({
-  cardId,
-  statCardDto,
+export const characterStatsFetcher = async ({
+  characterName,
+  realm,
 }: {
-  cardId?: number
-  statCardDto?: StatCardDto
-}) => {
-  if (cardId === undefined || !statCardDto) return
+  characterName?: string
+  realm?: string
+}): Promise<ApiResponse> => {
+  if (!realm || !characterName || realm === '' || characterName === '')
+    throw new Error('Missing arguments in character stat request')
 
-  const response = await statCardClient.update(cardId, statCardDto)
+  const result = await http.get<ApiResponse>(
+    `/api/CharacterStats?characterName=${characterName}&realm=${realm}&clientId=${process.env.NEXT_PUBLIC_BLIZZ_CLIENT_ID}`
+  )
 
-  handleIfNotSuccess(response)
-
-  return response.result
+  return result.data
 }
 
-const fetchers = {
-  queries: {
-    getStatCard,
-    getAllStatCards,
-    getCharacterStats,
-  },
-  mutations: {
-    createStatCard,
-    updateStatCard,
-    deleteStatCard,
-  },
+export const statCardCreator = async ({ newCard }: { newCard: StatCardDto }) => {
+  const result = await http.post<StatCardDto, AxiosResponse<ApiResponse>>(
+    '/api/StatCards',
+    newCard
+  )
+  return result.data
 }
-
-export default fetchers

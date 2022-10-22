@@ -7,20 +7,20 @@ import {
 } from '@tanstack/react-query'
 import { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
-import { Layout } from '../../../components/layout'
-import StatCardError from '../../../components/stat-card-error'
-import { CharacterStats, StatCardDto } from '../../../lib/generated-api/StatCardApi'
-import CharacterDisplay from '../../../components/character-display'
-import StatCardForm from '../../../components/stat-card-form'
-import { HIDDEN_STAT_NAMES } from '../../../lib/constants'
+import { Layout } from 'components/layout'
+import StatCardError from 'components/stat-card-error'
+import { CharacterStats, StatCardDto } from 'lib/generated-api/StatCardApi'
+import CharacterDisplay from 'components/character-display'
+import StatCardForm from 'components/stat-card-form'
+import { HIDDEN_STAT_NAMES } from 'lib/constants'
 import {
   useUpdateCardMutation,
   useGetStatCardQuery,
   useGetCharacterStatsQuery,
   QueryKeyEnum,
-} from '../../../lib/react-query/hooks'
-import { StatDto } from '../../../lib/generated-api/types'
-import { statCardsFetchers } from 'lib/react-query/fetchers'
+} from 'lib/react-query/hooks'
+import { StatDto } from 'lib/generated-api/custom-types'
+import { StatCards } from 'lib/react-query/entities'
 
 type SSRProps = {
   cardId: number
@@ -50,7 +50,7 @@ export const getServerSideProps: GetServerSideProps<SSRProps, EditCardParams> = 
   const numId = +cardId
   await queryClient.prefetchQuery(
     [QueryKeyEnum.getStatCard, { id: numId }],
-    statCardsFetchers.queries.getStatCard
+    StatCards.queries.getStatCard
   )
 
   return {

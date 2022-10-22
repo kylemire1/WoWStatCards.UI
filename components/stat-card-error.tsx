@@ -25,14 +25,14 @@ const StatCardError = (props: StatCardErrorProps) => {
             {Boolean(props.characterName) && Boolean(props.realm) ? (
               <>
                 <br />
-                <p>
+                <div>
                   <span className='font-bold'>You entered:</span>
                   <br />
                   <ul>
                     <li>Character Name: {props.characterName}</li>
                     <li>Realm: {props.realm}</li>
                   </ul>
-                </p>
+                </div>
               </>
             ) : null}
           </div>

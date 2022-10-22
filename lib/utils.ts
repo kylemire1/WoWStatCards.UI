@@ -1,4 +1,6 @@
-import { ApiResponse } from './generated-api/StatCardApi'
+// import { NextApiRequest } from 'next'
+// import { EndpointHandlerMap, supportedEndpoints } from 'pages/api/[...rest]'
+import { API_BASE_URL } from './constants'
 
 export const canUseDom = () => {
   return typeof window !== 'undefined'
@@ -15,17 +17,26 @@ export const camelCaseToTitle = (string: string) => {
   )
 }
 
-export const setLocalStorageItem = (name: string, value: string) => {
-  if (canUseDom()) {
-    window.localStorage.setItem(name, value)
-  }
-}
-export const getLocalStorageItem = (name: string) => {
-  if (canUseDom()) {
-    window.localStorage.getItem(name)
-  }
-}
+// export const getEndpointName = (req: NextApiRequest) => {
+//   const maybeEndpoint = (req.url ?? '').slice(5).split('?')[0]
 
-export const handleIfNotSuccess = (response: ApiResponse) => {
-  if (!response.isSuccess) throw new Error(response.errorMessages.join('\\n'))
+//   if (!isEndpointName(maybeEndpoint)) {
+//     throw new Error('Unsupported endpoint name received')
+//   }
+
+//   return (req.url ?? '').slice(5).split('?')[0] as keyof EndpointHandlerMap
+// }
+
+// const isEndpointName = (
+//   maybeEndpoint?: string
+// ): maybeEndpoint is keyof EndpointHandlerMap => {
+//   return typeof maybeEndpoint === 'string' && supportedEndpoints.includes(maybeEndpoint)
+// }
+
+export const getEnvRequestUrl = (requestUrl: string) => {
+  if (!canUseDom()) {
+    return `${API_BASE_URL}${requestUrl}`
+  }
+
+  return requestUrl
 }
