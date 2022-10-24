@@ -1,5 +1,8 @@
+import { useUser } from '@auth0/nextjs-auth0'
+import { HIDDEN_STAT_NAMES } from 'lib/constants'
 import React from 'react'
 import { camelCaseToTitle } from '../lib/utils'
+import ErrorAlert from './error-alert'
 
 type StatCardFormProps<T extends object> = {
   cardNameValue: string
@@ -25,6 +28,7 @@ function StatCardForm<T extends object>({
   maxChecked = 8,
   error,
 }: StatCardFormProps<T>) {
+  const { user } = useUser()
   return (
     <form method='post' onSubmit={handleFormSubmit}>
       <fieldset disabled={disableAllInputs}>
@@ -43,47 +47,53 @@ function StatCardForm<T extends object>({
           />
         </div>
         <fieldset className='mb-4'>
-          <legend className='mb-4'>Stats to Display (Choose up to {maxChecked})</legend>
+          <legend className='mb-4'>
+            Stats to Display (Choose up to {maxChecked})
+          </legend>
           <div className='grid gap-2 md:grid-cols-2'>
-            {Object.keys(statData).map((statName) => {
-              return (
-                <label
-                  key={`stat_${statName}`}
-                  className={
-                    !selectedStats.includes(statName) &&
-                    selectedStats.length === maxChecked
-                      ? 'opacity-50'
-                      : 'opacity-100'
-                  }
-                >
-                  <input
-                    type='checkbox'
-                    name={statName}
-                    value={statName}
-                    className='mr-2 disabled:opacity-50'
-                    onChange={handleStatCheckboxChange}
-                    disabled={
+            {Object.keys(statData)
+              .filter((s) => !HIDDEN_STAT_NAMES.includes(s))
+              .map((statName) => {
+                return (
+                  <label
+                    key={`stat_${statName}`}
+                    className={
                       !selectedStats.includes(statName) &&
                       selectedStats.length === maxChecked
+                        ? 'opacity-50'
+                        : 'opacity-100'
                     }
-                    defaultChecked={
-                      defaultChecked ? defaultChecked(statName) : undefined
-                    }
-                  />
-                  {camelCaseToTitle(statName)}
-                </label>
-              )
-            })}
+                  >
+                    <input
+                      type='checkbox'
+                      name={statName}
+                      value={statName}
+                      className='mr-2 disabled:opacity-50'
+                      onChange={handleStatCheckboxChange}
+                      disabled={
+                        !selectedStats.includes(statName) &&
+                        selectedStats.length === maxChecked
+                      }
+                      defaultChecked={
+                        defaultChecked ? defaultChecked(statName) : undefined
+                      }
+                    />
+                    {camelCaseToTitle(statName)}
+                  </label>
+                )
+              })}
           </div>
         </fieldset>
         <button
-          className='focus:ring-blue-500 focus:outline-none focus:border-transparent  focus:ring focus:ring-offset-2 focus-ring-offset-white'
+          className={`focus:ring-blue-500 focus:outline-none focus:border-transparent  focus:ring focus:ring-offset-2 focus-ring-offset-white disabled:opacity-50 ${
+            !user ? 'opacity-50' : null
+          }`}
           type='submit'
         >
           Save Card
         </button>
       </fieldset>
-      {error instanceof Error && <div>{error.message}</div>}
+      {error instanceof Error && <ErrorAlert>{error.message}</ErrorAlert>}
     </form>
   )
 }

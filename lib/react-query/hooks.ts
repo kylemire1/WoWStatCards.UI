@@ -3,16 +3,16 @@ import { StatCardDto } from '../generated-api/StatCardApi'
 import { StatCards } from './entities'
 
 export enum QueryKeyEnum {
-  getAllStatCards = 'statCards',
-  getCharacterStats = 'characterStats',
-  getStatCard = 'statCard',
-  me = 'me',
+  StatCardsGetAll = 'statCards',
+  CharacterStatsGet = 'characterStats',
+  StatCardsGet = 'statCard',
+  Me = 'me',
 }
 
 export const useGetAllStatCardsQuery = () => {
   const statCards = useQuery<Array<StatCardDto>>(
-    [QueryKeyEnum.getAllStatCards],
-    StatCards.queries.getAllStatCards
+    [QueryKeyEnum.StatCardsGetAll],
+    StatCards.queries.getAll
   )
 
   return statCards
@@ -26,7 +26,7 @@ export const useGetCharacterStatsQuery = ({
   realm: string
 }) => {
   const characterStats = useQuery(
-    [QueryKeyEnum.getCharacterStats, { characterName, realm }],
+    [QueryKeyEnum.CharacterStatsGet, { characterName, realm }],
     StatCards.queries.getCharacterStats
   )
 
@@ -34,16 +34,18 @@ export const useGetCharacterStatsQuery = ({
 }
 
 export const useSaveStatCardMutation = () => {
-  const saveStatCard = useMutation(StatCards.mutations.createStatCard)
+  const saveStatCard = useMutation(StatCards.mutations.create)
 
   return saveStatCard
 }
 
 type MutationHookProps = { queryClient: QueryClient }
-export const useDeleteStatCardMutation = ({ queryClient }: MutationHookProps) => {
-  const deleteCard = useMutation(StatCards.mutations.deleteStatCard, {
+export const useDeleteStatCardMutation = ({
+  queryClient,
+}: MutationHookProps) => {
+  const deleteCard = useMutation(StatCards.mutations.remove, {
     onSuccess() {
-      queryClient.invalidateQueries(['statCards'], {
+      queryClient.invalidateQueries([QueryKeyEnum.StatCardsGetAll], {
         exact: true,
         refetchType: 'active',
       })
@@ -55,18 +57,18 @@ export const useDeleteStatCardMutation = ({ queryClient }: MutationHookProps) =>
 
 export const useGetStatCardQuery = (id?: number) => {
   const statCard = useQuery(
-    [QueryKeyEnum.getStatCard, { id }],
-    StatCards.queries.getStatCard
+    [QueryKeyEnum.StatCardsGet, { id }],
+    StatCards.queries.get
   )
 
   return statCard
 }
 
 export const useUpdateCardMutation = ({ queryClient }: MutationHookProps) => {
-  const updateCard = useMutation(StatCards.mutations.updateStatCard, {
+  const updateCard = useMutation(StatCards.mutations.update, {
     onSuccess(data) {
       if (data) {
-        queryClient.invalidateQueries([QueryKeyEnum.getStatCard], {
+        queryClient.invalidateQueries([QueryKeyEnum.StatCardsGet], {
           exact: true,
           refetchType: 'active',
         })

@@ -21,6 +21,7 @@ import {
 } from 'lib/react-query/hooks'
 import { StatDto } from 'lib/generated-api/custom-types'
 import { StatCards } from 'lib/react-query/entities'
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
 
 type SSRProps = {
   cardId: number
@@ -31,37 +32,39 @@ export type EditCardParams = {
   cardId?: string
 }
 
-export const getServerSideProps: GetServerSideProps<SSRProps, EditCardParams> = async (
-  context
-) => {
-  const params = context.query
-  const cardId = params?.cardId
+export const getServerSideProps: GetServerSideProps<SSRProps, EditCardParams> =
+  withPageAuthRequired({
+    getServerSideProps: async (context) => {
+      const params = context.query
+      const cardId = params?.cardId
 
-  if (!cardId || typeof cardId !== 'string' || isNaN(+cardId)) {
-    return {
-      redirect: {
-        permanent: false,
-        destination: '/cards',
-      },
-    }
-  }
+      if (!cardId || typeof cardId !== 'string' || isNaN(+cardId)) {
+        return {
+          redirect: {
+            permanent: false,
+            destination: '/cards',
+          },
+        }
+      }
 
-  const queryClient = new QueryClient()
-  const numId = +cardId
-  await queryClient.prefetchQuery(
-    [QueryKeyEnum.getStatCard, { id: numId }],
-    StatCards.queries.getStatCard
-  )
+      const queryClient = new QueryClient()
+      const numId = +cardId
+      await queryClient.prefetchQuery(
+        [QueryKeyEnum.StatCardsGet, { id: numId }],
+        StatCards.queries.get
+      )
 
-  return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-      cardId: numId,
+      return {
+        props: {
+          dehydratedState: dehydrate(queryClient),
+          cardId: numId,
+        },
+      }
     },
-  }
-}
+  })
 
 const EditCard: NextPage<SSRProps> = (props) => {
+  const { user } = useUser()
   const router = useRouter()
   const queryClient = useQueryClient()
   const {
@@ -69,15 +72,20 @@ const EditCard: NextPage<SSRProps> = (props) => {
     mutateAsync: updateCard,
     isLoading: updateIsLoading,
   } = useUpdateCardMutation({ queryClient })
-  const { data: charDataFromDb, error: charError } = useGetStatCardQuery(props?.cardId)
-  const { data: statData, isLoading: statDataIsLoading } = useGetCharacterStatsQuery({
-    characterName: charDataFromDb?.characterName ?? '',
-    realm: charDataFromDb?.realm ?? '',
-  })
+  const { data: charDataFromDb, error: charError } = useGetStatCardQuery(
+    props?.cardId
+  )
+  const { data: statData, isLoading: statDataIsLoading } =
+    useGetCharacterStatsQuery({
+      characterName: charDataFromDb?.characterName ?? '',
+      realm: charDataFromDb?.realm ?? '',
+    })
   const [cardNameInputValue, setCardNameInputValue] = useState(
     charDataFromDb?.cardName ?? ''
   )
-  const [selectedStatsForUpdate, setSelectedStatsForUpdate] = useState<Array<string>>(
+  const [selectedStatsForUpdate, setSelectedStatsForUpdate] = useState<
+    Array<string>
+  >(
     charDataFromDb
       ? Object.entries(charDataFromDb)
           .filter(([key, value]) => {
@@ -112,7 +120,9 @@ const EditCard: NextPage<SSRProps> = (props) => {
     ])
   }
 
-  const handleUpdateCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
+  const handleUpdateCard: React.FormEventHandler<HTMLFormElement> = async (
+    e
+  ) => {
     e.preventDefault()
 
     if (!statData || !charDataFromDb.id) return
@@ -138,6 +148,7 @@ const EditCard: NextPage<SSRProps> = (props) => {
     const statCardDto: StatCardDto = {
       ...updatedStatCardData,
       cardName: cardNameInputValue,
+      userEmail: user?.email ?? '',
     }
 
     const result = await updateCard({
@@ -156,7 +167,8 @@ const EditCard: NextPage<SSRProps> = (props) => {
   }
 
   const mergedDataDto: StatDto = charData
-  const { avatarUrl, renderUrl, cardName, id, factionId, realm, ...stats } = charData
+  const { avatarUrl, renderUrl, cardName, id, factionId, realm, ...stats } =
+    charData
 
   return (
     <Layout>
@@ -179,8 +191,8 @@ const EditCard: NextPage<SSRProps> = (props) => {
                 disableAllInputs={updateIsLoading}
                 defaultChecked={(statName) => {
                   return (
-                    charDataFromDb[statName as keyof typeof charDataFromDb] !== null &&
-                    statName !== 'id'
+                    charDataFromDb[statName as keyof typeof charDataFromDb] !==
+                      null && statName !== 'id'
                   )
                 }}
                 error={updateError}
@@ -193,4 +205,4 @@ const EditCard: NextPage<SSRProps> = (props) => {
   )
 }
 
-export default EditCard
+export default withPageAuthRequired(EditCard)

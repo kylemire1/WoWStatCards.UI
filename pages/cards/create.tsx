@@ -13,6 +13,7 @@ import {
   useGetCharacterStatsQuery,
   QueryKeyEnum,
 } from 'lib/react-query/hooks'
+import { useUser } from '@auth0/nextjs-auth0'
 
 type SSRProps = {
   characterName: string
@@ -44,10 +45,9 @@ export const getServerSideProps: GetServerSideProps<
 
   const queryClient = new QueryClient()
   await queryClient.prefetchQuery(
-    [QueryKeyEnum.getCharacterStats, { characterName, realm }],
+    [QueryKeyEnum.CharacterStatsGet, { characterName, realm }],
     StatCards.queries.getCharacterStats
   )
-
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
@@ -61,6 +61,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
   const [cardName, setCardName] = useState('')
   const [selectedStats, setSelectedStats] = useState<Array<string>>([])
   const router = useRouter()
+  const { user } = useUser()
   const {
     error: saveError,
     mutateAsync: saveCard,
@@ -72,9 +73,10 @@ const CreateCards: NextPage<SSRProps> = (props) => {
   })
 
   if (!charData || charError instanceof Error) {
-    return <StatCardError characterName={props.characterName} realm={props.realm} />
+    return (
+      <StatCardError characterName={props.characterName} realm={props.realm} />
+    )
   }
-
   const {
     avatarUrl,
     renderUrl,
@@ -102,6 +104,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
   const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
 
+    const userEmail = user?.email
     if (cardName === '' || selectedStats.length === 0) return
 
     const statCardData: StatCardDto = selectedStats.reduce(
@@ -112,6 +115,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         return prevValue
       },
       {
+        userEmail,
         cardName,
         characterName,
         avatarUrl,
@@ -121,11 +125,14 @@ const CreateCards: NextPage<SSRProps> = (props) => {
       } as any
     )
 
-    const result = await saveCard(statCardData)
-    console.log('result', result)
+    try {
+      const result = await saveCard(statCardData)
 
-    if (typeof result.id === 'number') {
-      router.push('/cards')
+      if (typeof result?.id === 'number') {
+        router.push('/cards')
+      }
+    } catch (error) {
+      console.error(e)
     }
   }
 
@@ -135,7 +142,10 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         <h1 className='font-bold text-4xl'>Create</h1>
         {charData && (
           <>
-            <CharacterDisplay selectedStats={selectedStats} charData={charData} />
+            <CharacterDisplay
+              selectedStats={selectedStats}
+              charData={charData}
+            />
             <div className='rounded-lg p-8 my-8 shadow-2xl shadow-slate-300 bg-white'>
               <StatCardForm
                 cardNameValue={cardName}

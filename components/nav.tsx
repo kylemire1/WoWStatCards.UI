@@ -13,6 +13,13 @@ const Nav = () => {
             <a>Home</a>
           </Link>
         </li>
+        {user ? (
+          <li>
+            <Link href='/cards'>
+              <a>Saved Cards</a>
+            </Link>
+          </li>
+        ) : null}
         <li>
           {!isLoading && !user ? (
             <Link href='/api/auth/login'>
@@ -24,11 +31,6 @@ const Nav = () => {
               <a>Logout</a>
             </Link>
           ) : null}
-        </li>
-        <li>
-          <Link href='/cards'>
-            <a>Saved Cards</a>
-          </Link>
         </li>
       </ul>
     </nav>

@@ -5,7 +5,7 @@ export default handleAuth({
     try {
       await handleLogin(req, res, {
         authorizationParams: {
-          audience: process.env.AUTH0_AUDIENCE, // or AUTH0_AUDIENCE
+          audience: process.env.AUTH0_AUDIENCE,
         },
       })
     } catch (error) {

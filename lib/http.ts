@@ -1,12 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios'
 import { getEnvRequestUrl } from './utils'
-
-enum StatusCode {
-  Unauthorized = 401,
-  Forbidden = 403,
-  TooManyRequests = 429,
-  InternalServerError = 500,
-}
 
 export const axiosHeaders: Record<string, string | boolean> = {
   Accept: 'application/json',
@@ -31,16 +29,24 @@ class Http {
     http.interceptors.response.use(
       (response) => response,
       (error) => {
-        const { response } = error
-        return this.handleError(response)
+        return this.handleError(error)
       }
     )
+
+    http.interceptors.request.use((request) => {
+      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] =
+        process.env.NODE_ENV !== 'production' ? '0' : '1'
+
+      return request
+    })
 
     this.instance = http
     return http
   }
 
-  request<T = any, R = AxiosResponse<T>>(config: AxiosRequestConfig): Promise<R> {
+  request<T = any, R = AxiosResponse<T>>(
+    config: AxiosRequestConfig
+  ): Promise<R> {
     return this.http.request(config)
   }
 
@@ -77,28 +83,15 @@ class Http {
   // Handle global app errors
   // We can handle generic app errors depending on the status code
   private handleError(error: any) {
-    const status = error?.status
+    const axiosResponse: AxiosResponse = error.response
 
-    switch (status) {
-      case StatusCode.InternalServerError: {
-        // Handle InternalServerError
-        break
-      }
-      case StatusCode.Forbidden: {
-        // Handle Forbidden
-        break
-      }
-      case StatusCode.Unauthorized: {
-        // Handle Unauthorized
-        break
-      }
-      case StatusCode.TooManyRequests: {
-        // Handle TooManyRequests
-        break
-      }
-    }
-
-    return Promise.reject(error)
+    return Promise.reject(
+      new AxiosError(
+        axiosResponse.statusText,
+        String(axiosResponse.status),
+        axiosResponse.config
+      )
+    )
   }
 }
 

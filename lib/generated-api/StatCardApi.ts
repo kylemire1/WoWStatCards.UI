@@ -121,6 +121,7 @@ export interface StatCardDto extends CharacterStats {
   characterName: string
   avatarUrl: string
   renderUrl: string
+  userEmail: string
   factionId: FactionEnum
 }
 
