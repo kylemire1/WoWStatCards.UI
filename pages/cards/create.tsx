@@ -1,82 +1,82 @@
-import { dehydrate, DehydratedState, QueryClient } from "@tanstack/react-query";
-import { GetServerSideProps, NextPage } from "next";
-import { useRouter } from "next/router";
-import React, { useState } from "react";
-import CharacterDisplay from "../../components/character-display";
-import { Layout } from "../../components/layout";
-import StatCardError from "../../components/stat-card-error";
-import StatCardForm from "../../components/stat-card-form";
-import { StatCardDto } from "../../lib/generated-api/StatCardApi";
-import { fetchCharacterStats } from "../../lib/react-query/fetchers";
+import { dehydrate, DehydratedState, QueryClient } from '@tanstack/react-query'
+import { StatCards } from 'lib/react-query/entities'
+import { GetServerSideProps, NextPage } from 'next'
+import { useRouter } from 'next/router'
+import React, { useState } from 'react'
+import CharacterDisplay from 'components/character-display'
+import { Layout } from 'components/layout'
+import StatCardError from 'components/stat-card-error'
+import StatCardForm from 'components/stat-card-form'
+import { StatCardDto } from 'lib/generated-api/StatCardApi'
 import {
   useSaveStatCardMutation,
   useGetCharacterStatsQuery,
-} from "../../lib/react-query/hooks";
+  QueryKeyEnum,
+} from 'lib/react-query/hooks'
+import { useUser } from '@auth0/nextjs-auth0'
 
 type SSRProps = {
-  characterName: string;
-  realm: string;
-  dehydratedState: DehydratedState;
-};
+  characterName: string
+  realm: string
+  dehydratedState: DehydratedState
+}
 
 type CreateCardParams = {
-  characterName?: string;
-  realm?: string;
-};
+  characterName?: string
+  realm?: string
+}
 
 export const getServerSideProps: GetServerSideProps<
   SSRProps,
   CreateCardParams
 > = async (context) => {
-  const params = context.query;
-  const characterName = params?.characterName;
-  const realm = params?.realm;
+  const params = context.query
+  const characterName = params?.characterName
+  const realm = params?.realm
 
-  if (typeof characterName !== "string" || typeof realm !== "string") {
+  if (typeof characterName !== 'string' || typeof realm !== 'string') {
     return {
       redirect: {
         permanent: false,
-        destination: "/",
+        destination: '/',
       },
-    };
+    }
   }
 
-  const queryClient = new QueryClient({});
-
+  const queryClient = new QueryClient()
   await queryClient.prefetchQuery(
-    ["characterStats", { characterName, realm }],
-    fetchCharacterStats
-  );
-
+    [QueryKeyEnum.CharacterStatsGet, { characterName, realm }],
+    StatCards.queries.getCharacterStats
+  )
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
       characterName,
       realm,
     },
-  };
-};
+  }
+}
 
 const CreateCards: NextPage<SSRProps> = (props) => {
-  const [cardName, setCardName] = useState("");
-  const [selectedStats, setSelectedStats] = useState<Array<string>>([]);
-  const router = useRouter();
+  const [cardName, setCardName] = useState('')
+  const [selectedStats, setSelectedStats] = useState<Array<string>>([])
+  const router = useRouter()
+  const { user } = useUser()
   const {
     error: saveError,
     mutateAsync: saveCard,
     isLoading: saveIsLoading,
-  } = useSaveStatCardMutation();
+  } = useSaveStatCardMutation()
   const { error: charError, data: charData } = useGetCharacterStatsQuery({
     characterName: props.characterName,
     realm: props.realm,
-  });
+  })
 
   if (!charData || charError instanceof Error) {
     return (
       <StatCardError characterName={props.characterName} realm={props.realm} />
-    );
+    )
   }
-
   const {
     avatarUrl,
     renderUrl,
@@ -84,36 +84,38 @@ const CreateCards: NextPage<SSRProps> = (props) => {
     realm,
     factionId,
     ...stats
-  } = charData;
+  } = charData
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardName(e.target.value);
-  };
+    setCardName(e.target.value)
+  }
 
   const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+    const checked = e.target.checked
 
     if (checked) {
-      setSelectedStats([...selectedStats, e.target.value]);
-      return;
+      setSelectedStats([...selectedStats, e.target.value])
+      return
     }
 
-    setSelectedStats([...selectedStats.filter((s) => s !== e.target.value)]);
-  };
+    setSelectedStats([...selectedStats.filter((s) => s !== e.target.value)])
+  }
 
   const handleSaveCard: React.FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (cardName === "" || selectedStats.length === 0) return;
+    const userEmail = user?.email
+    if (cardName === '' || selectedStats.length === 0) return
 
     const statCardData: StatCardDto = selectedStats.reduce(
       (prevValue, currValue) => {
-        const statCopy: Record<string, number> = { ...stats };
-        prevValue[currValue] = statCopy[currValue];
+        const statCopy: Record<string, number> = { ...stats }
+        prevValue[currValue] = statCopy[currValue]
 
-        return prevValue;
+        return prevValue
       },
       {
+        userEmail,
         cardName,
         characterName,
         avatarUrl,
@@ -121,14 +123,18 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         realm,
         factionId: charData.factionId,
       } as any
-    );
+    )
 
-    const result = await saveCard(statCardData);
+    try {
+      const result = await saveCard(statCardData)
 
-    if (typeof result.id === "number") {
-      router.push("/cards");
+      if (typeof result?.id === 'number') {
+        router.push('/cards')
+      }
+    } catch (error) {
+      console.error(e)
     }
-  };
+  }
 
   return (
     <Layout>
@@ -156,7 +162,7 @@ const CreateCards: NextPage<SSRProps> = (props) => {
         )}
       </Layout.Container>
     </Layout>
-  );
-};
+  )
+}
 
-export default CreateCards;
+export default CreateCards

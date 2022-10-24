@@ -1,135 +1,138 @@
-import React, { useState } from "react";
+import React, { useState } from 'react'
 import {
   dehydrate,
   DehydratedState,
   QueryClient,
   useQueryClient,
-} from "@tanstack/react-query";
-import { GetServerSideProps, NextPage } from "next";
-import { useRouter } from "next/router";
-import { Layout } from "../../../components/layout";
-import StatCardError from "../../../components/stat-card-error";
-import {
-  CharacterStats,
-  StatCardDto,
-} from "../../../lib/generated-api/StatCardApi";
-import { getStatCard } from "../../../lib/react-query/fetchers";
-import CharacterDisplay from "../../../components/character-display";
-import StatCardForm from "../../../components/stat-card-form";
-import { HIDDEN_STAT_NAMES } from "../../../lib/constants";
+} from '@tanstack/react-query'
+import { GetServerSideProps, NextPage } from 'next'
+import { useRouter } from 'next/router'
+import { Layout } from 'components/layout'
+import StatCardError from 'components/stat-card-error'
+import { CharacterStats, StatCardDto } from 'lib/generated-api/StatCardApi'
+import CharacterDisplay from 'components/character-display'
+import StatCardForm from 'components/stat-card-form'
+import { HIDDEN_STAT_NAMES } from 'lib/constants'
 import {
   useUpdateCardMutation,
   useGetStatCardQuery,
   useGetCharacterStatsQuery,
-} from "../../../lib/react-query/hooks";
-import { StatDto } from "../../../lib/generated-api/types";
+  QueryKeyEnum,
+} from 'lib/react-query/hooks'
+import { StatDto } from 'lib/generated-api/custom-types'
+import { StatCards } from 'lib/react-query/entities'
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
 
 type SSRProps = {
-  cardId: number;
-  dehydratedState: DehydratedState;
-};
+  cardId: number
+  dehydratedState: DehydratedState
+}
 
 export type EditCardParams = {
-  cardId?: string;
-};
+  cardId?: string
+}
 
-export const getServerSideProps: GetServerSideProps<
-  SSRProps,
-  EditCardParams
-> = async (context) => {
-  const params = context.query;
-  const cardId = params?.cardId;
+export const getServerSideProps: GetServerSideProps<SSRProps, EditCardParams> =
+  withPageAuthRequired({
+    getServerSideProps: async (context) => {
+      const params = context.query
+      const cardId = params?.cardId
 
-  if (!cardId || typeof cardId !== "string" || isNaN(+cardId)) {
-    return {
-      redirect: {
-        permanent: false,
-        destination: "/cards",
-      },
-    };
-  }
+      if (!cardId || typeof cardId !== 'string' || isNaN(+cardId)) {
+        return {
+          redirect: {
+            permanent: false,
+            destination: '/cards',
+          },
+        }
+      }
 
-  const queryClient = new QueryClient();
-  const numId = +cardId;
-  await queryClient.prefetchQuery(["statCard", { id: numId }], getStatCard);
+      const queryClient = new QueryClient()
+      const numId = +cardId
+      await queryClient.prefetchQuery(
+        [QueryKeyEnum.StatCardsGet, { id: numId }],
+        StatCards.queries.get
+      )
 
-  return {
-    props: {
-      dehydratedState: dehydrate(queryClient),
-      cardId: numId,
+      return {
+        props: {
+          dehydratedState: dehydrate(queryClient),
+          cardId: numId,
+        },
+      }
     },
-  };
-};
+  })
 
 const EditCard: NextPage<SSRProps> = (props) => {
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const { user } = useUser()
+  const router = useRouter()
+  const queryClient = useQueryClient()
   const {
     error: updateError,
     mutateAsync: updateCard,
     isLoading: updateIsLoading,
-  } = useUpdateCardMutation({ queryClient });
+  } = useUpdateCardMutation({ queryClient })
   const { data: charDataFromDb, error: charError } = useGetStatCardQuery(
     props?.cardId
-  );
+  )
   const { data: statData, isLoading: statDataIsLoading } =
     useGetCharacterStatsQuery({
-      characterName: charDataFromDb?.characterName ?? "",
-      realm: charDataFromDb?.realm ?? "",
-    });
+      characterName: charDataFromDb?.characterName ?? '',
+      realm: charDataFromDb?.realm ?? '',
+    })
   const [cardNameInputValue, setCardNameInputValue] = useState(
-    charDataFromDb?.cardName ?? ""
-  );
+    charDataFromDb?.cardName ?? ''
+  )
   const [selectedStatsForUpdate, setSelectedStatsForUpdate] = useState<
     Array<string>
   >(
     charDataFromDb
       ? Object.entries(charDataFromDb)
           .filter(([key, value]) => {
-            return value !== null && !HIDDEN_STAT_NAMES.includes(key);
+            return value !== null && !HIDDEN_STAT_NAMES.includes(key)
           })
           .map(([key]) => key)
       : []
-  );
+  )
 
   if (
     (!statDataIsLoading && !statData) ||
     charError instanceof Error ||
     !charDataFromDb
   ) {
-    return <StatCardError />;
+    return <StatCardError />
   }
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardNameInputValue(e.target.value);
-  };
+    setCardNameInputValue(e.target.value)
+  }
 
   const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
+    const checked = e.target.checked
 
     if (checked) {
-      setSelectedStatsForUpdate([...selectedStatsForUpdate, e.target.value]);
-      return;
+      setSelectedStatsForUpdate([...selectedStatsForUpdate, e.target.value])
+      return
     }
 
     setSelectedStatsForUpdate([
       ...selectedStatsForUpdate.filter((s) => s !== e.target.value),
-    ]);
-  };
+    ])
+  }
 
   const handleUpdateCard: React.FormEventHandler<HTMLFormElement> = async (
     e
   ) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!statData || !charDataFromDb.id) return;
+    if (!statData || !charDataFromDb.id) return
 
     const updatedStatCardData: StatCardDto = selectedStatsForUpdate.reduce(
       (prevValue, currValue) => {
-        const statCopy = { ...statData };
-        prevValue[currValue] = statCopy[currValue as keyof CharacterStats];
+        const statCopy = { ...statData }
+        prevValue[currValue] = statCopy[currValue as keyof CharacterStats]
 
-        return prevValue;
+        return prevValue
       },
       {
         id: charDataFromDb.id,
@@ -140,31 +143,32 @@ const EditCard: NextPage<SSRProps> = (props) => {
         realm: charDataFromDb.realm,
         factionId: charDataFromDb.factionId,
       } as any
-    );
+    )
 
     const statCardDto: StatCardDto = {
       ...updatedStatCardData,
       cardName: cardNameInputValue,
-    };
+      userEmail: user?.email ?? '',
+    }
 
     const result = await updateCard({
       cardId: statCardDto.id,
       statCardDto: statCardDto,
-    });
+    })
 
-    if (typeof result?.id === "number") {
-      router.push("/cards");
+    if (typeof result?.id === 'number') {
+      router.push('/cards')
     }
-  };
+  }
 
   const charData = {
     ...charDataFromDb,
     ...statData,
-  };
+  }
 
-  const mergedDataDto: StatDto = charData;
+  const mergedDataDto: StatDto = charData
   const { avatarUrl, renderUrl, cardName, id, factionId, realm, ...stats } =
-    charData;
+    charData
 
   return (
     <Layout>
@@ -188,8 +192,8 @@ const EditCard: NextPage<SSRProps> = (props) => {
                 defaultChecked={(statName) => {
                   return (
                     charDataFromDb[statName as keyof typeof charDataFromDb] !==
-                      null && statName !== "id"
-                  );
+                      null && statName !== 'id'
+                  )
                 }}
                 error={updateError}
               />
@@ -198,7 +202,7 @@ const EditCard: NextPage<SSRProps> = (props) => {
         )}
       </Layout.Container>
     </Layout>
-  );
-};
+  )
+}
 
-export default EditCard;
+export default withPageAuthRequired(EditCard)

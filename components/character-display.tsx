@@ -1,30 +1,26 @@
-import React from "react";
-import Image from "next/image";
-import StatCard from "./stat-card";
-import SvgBackground from "./svg-background";
-import { camelCaseToTitle } from "../lib/utils";
-import { StatDto } from "../lib/generated-api/types";
+import React from 'react'
+import Image from 'next/image'
+import StatCard from './stat-card'
+import SvgBackground from './svg-background'
+import { camelCaseToTitle } from '../lib/utils'
+import { StatDto } from '../lib/generated-api/custom-types'
 
 type CharacterDisplayProps = {
-  charData: StatDto;
-  selectedStats: Array<string>;
-};
-const CharacterDisplay = ({
-  charData,
-  selectedStats,
-}: CharacterDisplayProps) => {
-  const { avatarUrl, renderUrl, characterName, realm, factionId, ...stats } =
-    charData;
+  charData: StatDto
+  selectedStats: Array<string>
+}
+const CharacterDisplay = ({ charData, selectedStats }: CharacterDisplayProps) => {
+  const { avatarUrl, renderUrl, characterName, realm, factionId, ...stats } = charData
 
   const selectedStatEntries = selectedStats
     .map((statName) => {
-      const statKey = statName as keyof typeof stats;
-      const statValue = stats[statKey];
-      if (statValue === undefined || typeof statValue === "string") return;
+      const statKey = statName as keyof typeof stats
+      const statValue = stats[statKey]
+      if (statValue === undefined || typeof statValue === 'string') return
 
-      return [camelCaseToTitle(statName), Math.round(statValue)];
+      return [camelCaseToTitle(statName), Math.round(statValue)]
     })
-    .filter(Boolean);
+    .filter(Boolean)
 
   return (
     <div>
@@ -56,30 +52,28 @@ const CharacterDisplay = ({
           </div>
         </div>
         <div className='absolute bottom-8 left-1/2 transform -translate-x-1/2'>
-          <p className='text-white text-center font-bold text-2xl'>
-            {characterName}
-          </p>
+          <p className='text-white text-center font-bold text-2xl'>{characterName}</p>
         </div>
       </StatCard>
     </div>
-  );
-};
+  )
+}
 
 const StatItem = ({
   stat,
 }: {
-  stat: Array<string | number | undefined> | undefined;
+  stat: Array<string | number | undefined> | undefined
 }) => {
-  if (stat === undefined || stat.length !== 2) return null;
+  if (stat === undefined || stat.length !== 2) return null
 
   return (
     <li>
       <span className='text-blue-500 font-bold block text-[10px] sm:text-xl md:text-3xl '>
         {stat[0]}
-      </span>{" "}
+      </span>{' '}
       <span className='text-sm md:text-lg lg:text-xl'>{stat[1]}</span>
     </li>
-  );
-};
+  )
+}
 
-export default CharacterDisplay;
+export default CharacterDisplay
